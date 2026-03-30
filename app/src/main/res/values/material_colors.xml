@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- md_grey_*, md_blue_grey_50, md_white moved to colors.xml -->
+
+    <color name="md_black">#000000</color>
+
+    <color name="color_1">#5d84ff</color>
+    <color name="color_2">#5f84ff</color>
+    <color name="color_3">#7098ff</color>
+    <color name="color_4">#dee8fc</color>
+    <color name="color_5">#ff9e68</color>
+    <color name="color_6">#e9ffe2</color>
+    <color name="color_7">#95d87d</color>
+    <color name="color_8">#FFC4F5</color>
+    <color name="color_9">#FFDDA2</color>
+</resources>

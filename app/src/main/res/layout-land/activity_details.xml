@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingStart="16dp"
+    android:paddingEnd="0dp">
+
+    <TextView
+        android:id="@+id/details_activity_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:paddingTop="12dp"
+        android:text="@string/details_activity_rv_title"
+        android:textAppearance="@style/Headline20TextAppearance"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/details_activity_art"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="?imageViewBackgroundDrawable"
+        android:contentDescription="@string/iv_content_desc"
+        android:padding="@dimen/bck_iv_sh_src_padding"
+        android:scaleType="centerCrop"
+        android:transitionName="@string/home_iv_st"
+        app:layout_constraintBottom_toTopOf="@id/details_activity_title_sub"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/details_activity_title"
+        app:layout_constraintWidth_max="300dp" />
+
+    <TextView
+        android:id="@+id/details_activity_title_sub"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="32dp"
+        android:gravity="center"
+        android:textAppearance="@style/ItemSubTextAppearance"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/details_activity_art"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/details_activity_art"
+        tools:text="Number of tracks \u25CF 20" />
+
+    <ImageView
+        android:id="@+id/details_activity_btn_close"
+        style="@style/ButtonStyle24"
+        android:layout_margin="8dp"
+        android:layout_marginEnd="16dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/iv_btn_close_description"
+        android:src="@drawable/ic_close"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <include
+        android:id="@+id/details_activity_rv"
+        layout="@layout/recycler_view_vertical"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="36dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="36dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/details_activity_art"
+        app:layout_constraintTop_toBottomOf="@id/details_activity_title"
+        tools:visibility="visible" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
