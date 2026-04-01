@@ -22,4 +22,4 @@ This project is a fork of **[Pulse Music](https://github.com/HardcodeCoder/Pulse
 
 We give full credit to the original developers for the design, architecture, and core features of this application.
 
-sha256:886935d9c3677ca7103ce76a787cc87fbcd04601e12e851e8ccf009afa7b3a0e
+sha256:9d71521a340089768bb91b90815876cd3cf2597c881b7de47f6aa5b3dacead49
