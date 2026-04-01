@@ -2,6 +2,7 @@ package com.tunes.player.ui;
 
 import android.content.Context;
 import android.content.Intent;
+import android.media.session.MediaController;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -36,8 +37,11 @@ import com.tunes.player.adapters.CardsAdapter;
 import com.tunes.player.helper.RecyclerViewGestureHelper;
 import com.tunes.player.interfaces.ItemClickListener;
 import com.tunes.player.interfaces.RecyclerViewGestures;
+import com.tunes.player.model.MusicModel;
+import com.tunes.player.singleton.TrackManager;
 import com.tunes.player.utils.PlaylistStorageManager;
 
+import java.util.Collections;
 import java.util.List;
 
 public class PlaylistCardFragment extends Fragment implements ItemClickListener.Cards, RecyclerViewGestures.GestureCallback {
@@ -46,6 +50,7 @@ public class PlaylistCardFragment extends Fragment implements ItemClickListener.
     private List<String> playlistNames = null;
     private boolean isPlaylistNamesModified = false;
     private CardsAdapter adapter;
+    private MediaController.TransportControls mTransportControl;
 
     public PlaylistCardFragment() {
     }
@@ -64,6 +69,11 @@ public class PlaylistCardFragment extends Fragment implements ItemClickListener.
         FloatingActionButton fab = view.findViewById(R.id.btn_add_playlist);
         fab.setOnClickListener(v -> openBottomDialog(false, -1));
 
+        FloatingActionButton shuffleFab = view.findViewById(R.id.btn_shuffle_all);
+        if (shuffleFab != null) {
+            shuffleFab.setOnClickListener(v -> shuffleAll());
+        }
+
         playlistNames = PlaylistStorageManager.getPlaylistTitles(mContext);
         addPendingPlaylistTiles(view);
 
@@ -71,6 +81,30 @@ public class PlaylistCardFragment extends Fragment implements ItemClickListener.
         t.setTitle(R.string.playlist_nav);
         if (null != getActivity())
             ((MainActivity) getActivity()).setSupportActionBar(t);
+    }
+
+    private void shuffleAll() {
+        List<MusicModel> allSongs = TrackManager.getInstance().getMainList();
+        if (allSongs != null && !allSongs.isEmpty()) {
+            Collections.shuffle(allSongs);
+            TrackManager.getInstance().buildDataList(allSongs, 0);
+            play();
+            Toast.makeText(mContext, "Shuffling all songs", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(mContext, "No songs found to shuffle", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void play() {
+        if (mTransportControl != null) {
+            mTransportControl.play();
+        } else if (getActivity() != null) {
+            MediaController controller = getActivity().getMediaController();
+            if (controller != null) {
+                mTransportControl = controller.getTransportControls();
+                if (mTransportControl != null) mTransportControl.play();
+            }
+        }
     }
 
     @Override

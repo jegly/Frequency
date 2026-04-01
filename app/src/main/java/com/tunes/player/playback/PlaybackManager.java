@@ -35,7 +35,7 @@ public class PlaybackManager implements Playback.Callback {
     private final Playback mPlayback;
     private final TrackManager mTrackManager;
     private final PlaybackServiceCallback mServiceCallback;
-    private int mLastKnownMediaId = -1;
+    private String mLastKnownPath = "";
 
     public PlaybackManager(Context context, Playback playback,
                            TrackManager trackManager,
@@ -95,8 +95,8 @@ public class PlaybackManager implements Playback.Callback {
         MusicModel item = mTrackManager.getActiveQueueItem();
         if (item == null) return;
 
-        boolean mediaChanged = (item.getId() != mLastKnownMediaId);
-        mLastKnownMediaId = item.getId();
+        boolean mediaChanged = !item.getSongPath().equals(mLastKnownPath);
+        mLastKnownPath = item.getSongPath();
 
         mPlayback.onPlay(item, mediaChanged);
         mServiceCallback.onPlaybackStart();
@@ -109,7 +109,7 @@ public class PlaybackManager implements Playback.Callback {
 
     private void handlePause() {
         mPlayback.onPause();
-        mServiceCallback.onStopNotification();
+        // Don't stop notification immediately, let the callback update it
     }
 
     private void handleStop() {

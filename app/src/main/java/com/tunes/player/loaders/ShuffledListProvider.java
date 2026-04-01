@@ -1,6 +1,7 @@
 package com.tunes.player.loaders;
 
-import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Looper;
 
 import com.tunes.player.interfaces.AsyncTaskCallback;
 import com.tunes.player.model.MusicModel;
@@ -9,45 +10,43 @@ import com.tunes.player.singleton.TrackManager;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-public class ShuffledListProvider extends AsyncTask<Void, Void, List<MusicModel>> {
+/** Replaced deprecated AsyncTask with ExecutorService + main-thread Handler. */
+public class ShuffledListProvider {
 
+    private static final ExecutorService sExecutor = Executors.newSingleThreadExecutor();
+    private static final Handler sMainHandler = new Handler(Looper.getMainLooper());
 
-    private List<MusicModel> listToReturn = new ArrayList<>();
-    private AsyncTaskCallback.Simple mCallback;
+    private final AsyncTaskCallback.Simple mCallback;
 
     public ShuffledListProvider(AsyncTaskCallback.Simple callback) {
         mCallback = callback;
     }
 
-    @Override
-    protected List<MusicModel> doInBackground(Void... voids) {
-        return suggested();
+    public void execute() {
+        sExecutor.execute(() -> {
+            List<MusicModel> result = suggested();
+            sMainHandler.post(() -> {
+                if (mCallback != null) mCallback.onTaskComplete(result);
+            });
+        });
     }
 
     private List<MusicModel> suggested() {
-        List<MusicModel> listToWorkOn = TrackManager.getInstance().getMainList();
-        if (null != listToWorkOn) {
-            int size = listToWorkOn.size(), index;
-            if (size > 0) {
-                int i = 0;
-                Random rn = new Random();
-                while (i < 15) {
-                    index = rn.nextInt(size);
-                    if (index == size)
-                        index = index - 1;
-                    if (!listToReturn.contains(listToWorkOn.get(index))) {
-                        listToReturn.add(listToWorkOn.get(index));
-                        i++;
-                    }
-                }
-            }
-        }
-        return listToReturn;
-    }
+        List<MusicModel> source = TrackManager.getInstance().getMainList();
+        List<MusicModel> out = new ArrayList<>();
+        if (source == null || source.isEmpty()) return out;
 
-    @Override
-    protected void onPostExecute(List<MusicModel> musicModels) {
-        mCallback.onTaskComplete(musicModels);
+        int size = source.size();
+        Random rn = new Random();
+        int attempts = 0;
+        while (out.size() < 15 && attempts < size * 3) {
+            MusicModel candidate = source.get(rn.nextInt(size));
+            if (!out.contains(candidate)) out.add(candidate);
+            attempts++;
+        }
+        return out;
     }
 }

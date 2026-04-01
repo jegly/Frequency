@@ -19,7 +19,6 @@ import com.tunes.player.singleton.TrackManager;
 import com.tunes.player.loaders.TrackFetcherFromStorage;
 import com.tunes.player.loaders.TrackFetcherFromStorage.Sort;
 import com.tunes.player.themes.ThemeManager;
-import com.tunes.player.ui.AlbumFragment;
 import com.tunes.player.ui.ArtistFragment;
 import com.tunes.player.ui.ControlsFragment;
 import com.tunes.player.ui.HomeFragment;
@@ -32,7 +31,6 @@ public class MainActivity extends MediaSessionActivity {
     public static final String TAG = "MainActivity";
     private static final String HOME = "HomeFragment";
     private static final String LIBRARY = "LibraryFragment";
-    private static final String ALBUMS = "AlbumsFragment";
     private static final String PLAYLIST_CARDS = "PlaylistCardFragment";
     private static final String ARTIST = "ArtistFragment";
     private static final String ACTIVE = "ActiveFragment";
@@ -49,7 +47,6 @@ public class MainActivity extends MediaSessionActivity {
         }
     };
 
-    private Fragment albumsFrag = null;
     private MediaController mController;
     private Fragment activeFrag = null;
     private MediaBrowser mMediaBrowser;
@@ -66,10 +63,12 @@ public class MainActivity extends MediaSessionActivity {
 
         setContentView(R.layout.activity_main);
 
-        if (TrackManager.getInstance().getMainList() == null) {
+        if (TrackManager.getInstance().getMainList().isEmpty()) {
             TrackFetcherFromStorage ml = new TrackFetcherFromStorage(getContentResolver(), list -> {
-                TrackManager.getInstance().setMainList(list);
-                setUpMainContents(savedInstanceState);
+                new Thread(() -> {
+                    TrackManager.getInstance().setMainList(list);
+                    runOnUiThread(() -> setUpMainContents(savedInstanceState));
+                }).start();
             }, Sort.TITLE_ASC);
             ml.execute();
         } else setUpMainContents(savedInstanceState);
@@ -77,7 +76,15 @@ public class MainActivity extends MediaSessionActivity {
 
     private void setUpMainContents(Bundle savedInstanceState) {
         if (savedInstanceState == null) switchFragment(homeFrag, HOME);
-        else switchFragment(activeFrag, savedInstanceState.getString(ACTIVE, HOME));
+        else {
+            String tag = savedInstanceState.getString(ACTIVE, HOME);
+            switch (tag) {
+                case LIBRARY: switchFragment(libraryFrag, LIBRARY); break;
+                case PLAYLIST_CARDS: switchFragment(playlistCardFrag, PLAYLIST_CARDS); break;
+                case ARTIST: switchFragment(artistFrag, ARTIST); break;
+                default: switchFragment(homeFrag, HOME); break;
+            }
+        }
         setUpBottomNavigationView();
     }
 
@@ -96,10 +103,6 @@ public class MainActivity extends MediaSessionActivity {
             } else if (id == R.id.nav_playlist) {
                 if (activeFrag != playlistCardFrag) {
                     switchFragment(playlistCardFrag, PLAYLIST_CARDS);
-                }
-            } else if (id == R.id.nav_album) {
-                if (activeFrag != albumsFrag) {
-                    switchFragment(albumsFrag, ALBUMS);
                 }
             } else if (id == R.id.nav_artist) {
                 if (activeFrag != artistFrag) {
@@ -129,11 +132,6 @@ public class MainActivity extends MediaSessionActivity {
                     switchTo = playlistCardFrag;
                     break;
 
-                case ALBUMS:
-                    albumsFrag = new AlbumFragment();
-                    switchTo = albumsFrag;
-                    break;
-
                 case ARTIST:
                     artistFrag = new ArtistFragment();
                     switchTo = artistFrag;
@@ -157,12 +155,13 @@ public class MainActivity extends MediaSessionActivity {
                         .show(switchTo)
                         .commit();
             }
-        } else
+        } else if (switchTo != activeFrag) {
             fm.beginTransaction()
                     .setCustomAnimations(R.anim.fragment_enter, R.anim.fragment_exit)
                     .hide(activeFrag)
                     .show(switchTo)
                     .commit();
+        }
         activeFrag = switchTo;
     }
 
@@ -195,7 +194,7 @@ public class MainActivity extends MediaSessionActivity {
             recreate();
         }
         super.onStart();
-        if (null != mController && mMediaBrowser.isConnected()) {
+        if (null != mController && mMediaBrowser != null && mMediaBrowser.isConnected()) {
             mController.registerCallback(mCallback);
             if (null != mController.getMetadata())
                 showControlsFragment();

@@ -38,6 +38,7 @@ public class LibraryFragment extends Fragment implements LibraryItemClickListene
     private TrackManager tm;
     private List<MusicModel> mList = null;
     private MediaController.TransportControls mTransportControl;
+    private TextView mTotalSongsTv;
 
     public LibraryFragment() {
     }
@@ -58,6 +59,8 @@ public class LibraryFragment extends Fragment implements LibraryItemClickListene
 
         if (null != getActivity())
             ((MainActivity) getActivity()).setSupportActionBar(toolbar);
+
+        mTotalSongsTv = view.findViewById(R.id.tv_total_songs);
 
         startPostponedEnterTransition();
         setRv(view);
@@ -88,6 +91,15 @@ public class LibraryFragment extends Fragment implements LibraryItemClickListene
             recyclerView.setHasFixedSize(true);
             LibraryAdapter adapter = new LibraryAdapter(mList, getLayoutInflater(), this);
             recyclerView.setAdapter(adapter);
+
+            if (mTotalSongsTv != null) {
+                String countText = mList.size() + " songs";
+                mTotalSongsTv.setText(countText);
+            }
+        } else {
+            if (mTotalSongsTv != null) {
+                mTotalSongsTv.setText("0 songs");
+            }
         }
     }
 

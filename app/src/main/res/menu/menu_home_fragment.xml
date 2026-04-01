@@ -6,4 +6,9 @@
         android:icon="@drawable/ic_search"
         android:title="@string/searchHint"
         app:showAsAction="always" />
+    <item
+        android:id="@+id/import_music"
+        android:icon="@drawable/ic_floppy"
+        android:title="@string/select_track"
+        app:showAsAction="always" />
 </menu>

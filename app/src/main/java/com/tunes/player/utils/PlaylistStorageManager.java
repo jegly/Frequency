@@ -6,212 +6,336 @@ import android.util.Log;
 import com.tunes.player.R;
 import com.tunes.player.model.MusicModel;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Stores playlist, history, favourites and imported-track data as JSON inside
+ * the app's private files directory.  JSON replaces the previous Java-serialization
+ * approach (which had no type-filter and could deserialise unexpected classes).
+ */
 public class PlaylistStorageManager {
 
-    private static final String FOLDER_HISTORY = "/history/";
-    private static final String PLAYLIST_DATA_FILE_NAME = "Playlist_Tracks_Data.data";
-    private static final String PLAYLIST_TITLE_FILE_NAME = "Playlist_Names.data";
-    private static final String FAVORITE_TRACKS_FILE_NAME = "FavoriteTracks.data";
+    private static final String TAG = "PlaylistStorageManager";
 
-    private PlaylistStorageManager() {
-    }
+    private static final String FOLDER_HISTORY       = "history";
+    private static final String PLAYLIST_DATA_FILE   = "Playlist_Tracks_Data.json";
+    private static final String PLAYLIST_TITLES_FILE = "Playlist_Names.json";
+    private static final String FAVORITE_TRACKS_FILE = "FavoriteTracks.json";
+    private static final String IMPORTED_TRACKS_FILE = "ImportedTracks.json";
 
-    public static void addToRecentTracks(Context context, MusicModel md){
-        File f = new File(context.getFilesDir().getAbsoluteFile() + FOLDER_HISTORY + md.getSongName() + ".history");
-        try {
-            if (!f.getParentFile().exists()) f.getParentFile().mkdirs();
-            FileOutputStream fileOutputStream = new FileOutputStream(f);
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
-            objectOutputStream.writeObject(md);
-            objectOutputStream.close();
-            fileOutputStream.close();
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-    }
+    private PlaylistStorageManager() {}
 
-    public static List<MusicModel> getRecentTracks(Context context){
-        File f = new File(context.getFilesDir().getAbsoluteFile() + FOLDER_HISTORY);
-        File[] files = f.listFiles();
-        FileInputStream fileInputStream;
-        ObjectInputStream objectInputStream;
-        List<MusicModel> list = new ArrayList<>();
-        if(null != files) {
-            Arrays.sort(files, (o1, o2) -> (int)(o2.lastModified() - o1.lastModified()));
-            for (File file : files) {
-                try {
-                    fileInputStream = new FileInputStream(file);
-                    objectInputStream = new ObjectInputStream(fileInputStream);
-                    list.add((MusicModel) objectInputStream.readObject());
-                    objectInputStream.close();
-                    fileInputStream.close();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        return list;
-    }
+    // -------------------------------------------------------------------------
+    // History
+    // -------------------------------------------------------------------------
 
-    public static void saveFavorite(Context mContext, List<MusicModel> list) {
-        if (null != list && list.size() > 0) {
-            FileOutputStream outputStream;
+    public static void addToRecentTracks(Context context, MusicModel md) {
+        new Thread(() -> {
+            File dir = new File(context.getFilesDir(), FOLDER_HISTORY);
+            if (!dir.exists()) dir.mkdirs();
+            String safeName = md.getSongName()
+                    .replaceAll("[\\\\/:*?\"<>|]", "_") + ".json";
+            File f = new File(dir, safeName);
             try {
-                outputStream = mContext.openFileOutput(FAVORITE_TRACKS_FILE_NAME, Context.MODE_PRIVATE);
-                ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
-                objectOutputStream.writeObject(list);
-                objectOutputStream.close();
-                outputStream.close();
-            } catch (Exception e) {
-                e.printStackTrace();
+                writeJson(f, musicModelToJson(md).toString());
+            } catch (JSONException | IOException e) {
+                Log.e(TAG, "addToRecentTracks failed", e);
             }
-        } else {
-            File f = new File(mContext.getFilesDir(), FAVORITE_TRACKS_FILE_NAME);
-            if (f.exists() && f.delete())
-                Log.w("PlaylistStorageManager", "Favorites playlist deleted");
-        }
+        }).start();
     }
 
-    @SuppressWarnings("unchecked")
-    public static List<MusicModel> getFavorite(Context context) {
-        FileInputStream inputStream;
+    public static List<MusicModel> getRecentTracks(Context context) {
+        File dir = new File(context.getFilesDir(), FOLDER_HISTORY);
+        File[] files = dir.listFiles();
         List<MusicModel> list = new ArrayList<>();
-        try {
-            inputStream = context.openFileInput(FAVORITE_TRACKS_FILE_NAME);
-            ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
-            list = ((List<MusicModel>) objectInputStream.readObject());
-            objectInputStream.close();
-            inputStream.close();
-        } catch (Exception e) {
-            LogHelper(FAVORITE_TRACKS_FILE_NAME);
+        if (files == null) return list;
+
+        Arrays.sort(files, (o1, o2) -> Long.compare(o2.lastModified(), o1.lastModified()));
+        int count = 0;
+        for (File f : files) {
+            if (count >= 50) break;
+            try {
+                String json = readFile(f);
+                if (json != null) {
+                    list.add(musicModelFromJson(new JSONObject(json)));
+                    count++;
+                }
+            } catch (JSONException | IOException e) {
+                Log.e(TAG, "getRecentTracks error reading " + f.getName(), e);
+            }
         }
         return list;
     }
 
-    public static void savePlaylistTitles(Context mContext, List<String> titles) {
-        FileOutputStream outputStream;
-        try {
-            outputStream = mContext.openFileOutput(PLAYLIST_TITLE_FILE_NAME, Context.MODE_PRIVATE);
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
-            objectOutputStream.writeObject(titles);
-            objectOutputStream.close();
-            outputStream.close();
-        } catch (Exception e) {
-            LogHelper(PLAYLIST_TITLE_FILE_NAME);
-        }
+    // -------------------------------------------------------------------------
+    // Favourites
+    // -------------------------------------------------------------------------
+
+    public static void saveFavorite(Context context, List<MusicModel> list) {
+        saveTrackList(context, FAVORITE_TRACKS_FILE, list);
     }
 
-    @SuppressWarnings("unchecked")
-    public static List<String> getPlaylistTitles(Context mContext) {
-        FileInputStream inputStream;
+    public static List<MusicModel> getFavorite(Context context) {
+        return loadTrackList(context, FAVORITE_TRACKS_FILE);
+    }
+
+    // -------------------------------------------------------------------------
+    // Imported tracks
+    // -------------------------------------------------------------------------
+
+    public static void saveImportedTracks(Context context, List<MusicModel> list) {
+        new Thread(() -> {
+            synchronized (IMPORTED_TRACKS_FILE) {
+                List<MusicModel> current = loadTrackList(context, IMPORTED_TRACKS_FILE);
+                boolean modified = false;
+                for (MusicModel m : list) {
+                    boolean exists = false;
+                    for (MusicModel c : current) {
+                        if (c.getSongPath() != null && c.getSongPath().equals(m.getSongPath())) {
+                            exists = true;
+                            break;
+                        }
+                    }
+                    if (!exists) {
+                        current.add(m);
+                        modified = true;
+                    }
+                }
+                if (modified) saveTrackListSync(context, IMPORTED_TRACKS_FILE, current);
+            }
+        }).start();
+    }
+
+    public static List<MusicModel> getImportedTracks(Context context) {
+        return loadTrackList(context, IMPORTED_TRACKS_FILE);
+    }
+
+    // -------------------------------------------------------------------------
+    // Playlist titles
+    // -------------------------------------------------------------------------
+
+    public static void savePlaylistTitles(Context context, List<String> titles) {
+        new Thread(() -> {
+            JSONArray arr = new JSONArray();
+            for (String t : titles) arr.put(t);
+            File f = new File(context.getFilesDir(), PLAYLIST_TITLES_FILE);
+            try {
+                writeJson(f, arr.toString());
+            } catch (IOException e) {
+                Log.e(TAG, "savePlaylistTitles failed", e);
+            }
+        }).start();
+    }
+
+    public static List<String> getPlaylistTitles(Context context) {
         List<String> list = new ArrayList<>();
-        try {
-            inputStream = mContext.openFileInput(PLAYLIST_TITLE_FILE_NAME);
-            ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
-            list.clear();
-            list.addAll((List<String>) objectInputStream.readObject());
-            objectInputStream.close();
-            inputStream.close();
-        } catch (Exception e) {
-            LogHelper(PLAYLIST_TITLE_FILE_NAME);
+        File f = new File(context.getFilesDir(), PLAYLIST_TITLES_FILE);
+        if (!f.exists()) {
+            list.add(context.getString(R.string.playlist_current_queue));
+            list.add(context.getString(R.string.favorite_playlist));
+            return list;
         }
-        if (list.size() == 0) {
-            list.add(mContext.getString(R.string.playlist_current_queue));
-            list.add(mContext.getString(R.string.favorite_playlist));
+        try {
+            String json = readFile(f);
+            if (json != null) {
+                JSONArray arr = new JSONArray(json);
+                for (int i = 0; i < arr.length(); i++) list.add(arr.getString(i));
+            }
+        } catch (JSONException | IOException e) {
+            Log.e(TAG, "getPlaylistTitles failed", e);
+        }
+        if (list.isEmpty()) {
+            list.add(context.getString(R.string.playlist_current_queue));
+            list.add(context.getString(R.string.favorite_playlist));
         }
         return list;
     }
 
-    private static void savePlaylistTracksALl(Context mContext, List<List<MusicModel>> listOfLists) {
-        FileOutputStream outputStream;
-        try {
-            outputStream = mContext.openFileOutput(PLAYLIST_DATA_FILE_NAME, Context.MODE_PRIVATE);
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
-            objectOutputStream.writeObject(listOfLists);
-            objectOutputStream.close();
-            outputStream.close();
-        } catch (Exception e) {
-            LogHelper(PLAYLIST_DATA_FILE_NAME);
-        }
+    // -------------------------------------------------------------------------
+    // Playlist tracks
+    // -------------------------------------------------------------------------
+
+    public static void updatePlaylistTracks(Context context, List<MusicModel> updatedList, int index) {
+        new Thread(() -> {
+            synchronized (PLAYLIST_DATA_FILE) {
+                List<List<MusicModel>> all = loadAllPlaylistTracks(context);
+                while (all.size() <= index) all.add(new ArrayList<>());
+                all.set(index, updatedList != null ? new ArrayList<>(updatedList) : new ArrayList<>());
+                saveAllPlaylistTracks(context, all);
+            }
+        }).start();
     }
 
-    @SuppressWarnings("unchecked")
-    private static List<List<MusicModel>> getPlaylistTracksAll(Context mContext) {
-        FileInputStream inputStream;
-        List<List<MusicModel>> listOfList = new ArrayList<>();
-        try {
-            inputStream = mContext.openFileInput(PLAYLIST_DATA_FILE_NAME);
-            ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
-            listOfList = (List<List<MusicModel>>) objectInputStream.readObject();
-            objectInputStream.close();
-            inputStream.close();
-        } catch (Exception e) {
-            LogHelper(PLAYLIST_DATA_FILE_NAME);
-        }
-        return listOfList;
-    }
-
-    public static void updatePlaylistTracks(Context mContext, List<MusicModel> updatedList, int index) {
-        List<List<MusicModel>> listOfList = getPlaylistTracksAll(mContext);
-        
-        // Ensure the list is large enough to contain the index
-        while (listOfList.size() <= index) {
-            listOfList.add(new ArrayList<>());
-        }
-        
-        if (updatedList != null) {
-            listOfList.set(index, updatedList);
-        } else {
-            listOfList.set(index, new ArrayList<>());
-        }
-
-        savePlaylistTracksALl(mContext, listOfList);
-    }
-
-    public static List<MusicModel> getPlaylistTrackAtPosition(Context mContext, int pos) {
-        List<List<MusicModel>> listOfList = getPlaylistTracksAll(mContext);
-        if (pos >= 0 && pos < listOfList.size()) {
-            return new ArrayList<>(listOfList.get(pos));
-        }
+    public static List<MusicModel> getPlaylistTrackAtPosition(Context context, int pos) {
+        List<List<MusicModel>> all = loadAllPlaylistTracks(context);
+        if (pos >= 0 && pos < all.size()) return new ArrayList<>(all.get(pos));
         return new ArrayList<>();
     }
 
-    public static void dropPlaylistCardDataAt(Context mContext, int pos) {
-        // Since pos 0 and 1 are special, we need to adjust if we are deleting custom playlists
-        // pos in PlaylistCardFragment corresponds to the index in playlistNames.
-        // Custom playlists start at index 2 in playlistNames.
-        int customIndex = pos - 2;
-        if (customIndex >= 0) {
-            List<List<MusicModel>> listOfList = getPlaylistTracksAll(mContext);
-            if (customIndex < listOfList.size()) {
-                listOfList.remove(customIndex);
-                savePlaylistTracksALl(mContext, listOfList);
+    public static void dropPlaylistCardDataAt(Context context, int pos) {
+        new Thread(() -> {
+            synchronized (PLAYLIST_DATA_FILE) {
+                int customIndex = pos - 2;
+                if (customIndex < 0) return;
+                List<List<MusicModel>> all = loadAllPlaylistTracks(context);
+                if (customIndex < all.size()) {
+                    all.remove(customIndex);
+                    saveAllPlaylistTracks(context, all);
+                }
+            }
+        }).start();
+    }
+
+    public static void dropAllPlaylistData(Context context) {
+        new Thread(() -> {
+            new File(context.getFilesDir(), PLAYLIST_TITLES_FILE).delete();
+            new File(context.getFilesDir(), PLAYLIST_DATA_FILE).delete();
+        }).start();
+    }
+
+    // -------------------------------------------------------------------------
+    // Private helpers
+    // -------------------------------------------------------------------------
+
+    private static void saveTrackList(Context context, String fileName, List<MusicModel> list) {
+        new Thread(() -> saveTrackListSync(context, fileName, list)).start();
+    }
+
+    private static synchronized void saveTrackListSync(Context context, String fileName, List<MusicModel> list) {
+        File f = new File(context.getFilesDir(), fileName);
+        if (list == null || list.isEmpty()) {
+            if (f.exists() && f.delete()) Log.d(TAG, fileName + " deleted");
+            return;
+        }
+        JSONArray arr = new JSONArray();
+        for (MusicModel m : list) {
+            try { arr.put(musicModelToJson(m)); } catch (JSONException e) {
+                Log.e(TAG, "saveTrackListSync serialise error", e);
             }
         }
-    }
-
-    public static void dropAllPlaylistData(Context mContext) {
         try {
-            File f = new File(mContext.getFilesDir(), PLAYLIST_TITLE_FILE_NAME);
-            if (f.exists()) f.delete();
-            f = new File(mContext.getFilesDir(), PLAYLIST_DATA_FILE_NAME);
-            if (f.exists()) f.delete();
-        } catch (Exception e) {
-            LogHelper(PLAYLIST_TITLE_FILE_NAME + "and" + PLAYLIST_DATA_FILE_NAME);
+            writeJson(f, arr.toString());
+        } catch (IOException e) {
+            Log.e(TAG, "saveTrackListSync write error for " + fileName, e);
         }
     }
 
-    private static void LogHelper(String file) {
-        Log.v("PlaylistStorageManager", "File not found : " + file);
+    private static synchronized List<MusicModel> loadTrackList(Context context, String fileName) {
+        List<MusicModel> list = new ArrayList<>();
+        File f = new File(context.getFilesDir(), fileName);
+        if (!f.exists()) return list;
+        try {
+            String json = readFile(f);
+            if (json == null) return list;
+            JSONArray arr = new JSONArray(json);
+            for (int i = 0; i < arr.length(); i++) {
+                list.add(musicModelFromJson(arr.getJSONObject(i)));
+            }
+        } catch (JSONException | IOException e) {
+            Log.e(TAG, "loadTrackList error for " + fileName, e);
+        }
+        return list;
     }
 
+    private static synchronized void saveAllPlaylistTracks(Context context, List<List<MusicModel>> listOfLists) {
+        File f = new File(context.getFilesDir(), PLAYLIST_DATA_FILE);
+        JSONArray outer = new JSONArray();
+        for (List<MusicModel> inner : listOfLists) {
+            JSONArray arr = new JSONArray();
+            for (MusicModel m : inner) {
+                try { arr.put(musicModelToJson(m)); } catch (JSONException e) {
+                    Log.e(TAG, "saveAllPlaylistTracks serialise error", e);
+                }
+            }
+            outer.put(arr);
+        }
+        try {
+            writeJson(f, outer.toString());
+        } catch (IOException e) {
+            Log.e(TAG, "saveAllPlaylistTracks write error", e);
+        }
+    }
+
+    private static synchronized List<List<MusicModel>> loadAllPlaylistTracks(Context context) {
+        List<List<MusicModel>> result = new ArrayList<>();
+        File f = new File(context.getFilesDir(), PLAYLIST_DATA_FILE);
+        if (!f.exists()) return result;
+        try {
+            String json = readFile(f);
+            if (json == null) return result;
+            JSONArray outer = new JSONArray(json);
+            for (int i = 0; i < outer.length(); i++) {
+                JSONArray inner = outer.getJSONArray(i);
+                List<MusicModel> list = new ArrayList<>();
+                for (int j = 0; j < inner.length(); j++) {
+                    list.add(musicModelFromJson(inner.getJSONObject(j)));
+                }
+                result.add(list);
+            }
+        } catch (JSONException | IOException e) {
+            Log.e(TAG, "loadAllPlaylistTracks error", e);
+        }
+        return result;
+    }
+
+    // -------------------------------------------------------------------------
+    // JSON <-> MusicModel
+    // -------------------------------------------------------------------------
+
+    private static JSONObject musicModelToJson(MusicModel m) throws JSONException {
+        JSONObject o = new JSONObject();
+        o.put("id",        m.getId());
+        o.put("name",      m.getSongName());
+        o.put("artist",    m.getArtist());
+        o.put("album",     m.getAlbum());
+        o.put("path",      m.getSongPath()    != null ? m.getSongPath()    : "");
+        o.put("art",       m.getAlbumArtUrl() != null ? m.getAlbumArtUrl() : "");
+        o.put("duration",  m.getDuration());
+        o.put("dateAdded", m.getDateAdded());
+        return o;
+    }
+
+    private static MusicModel musicModelFromJson(JSONObject o) throws JSONException {
+        return new MusicModel(
+                o.getInt("id"),
+                o.optString("name",    ""),
+                o.optString("artist",  ""),
+                o.optString("album",   ""),
+                o.optString("path",    null),
+                o.optString("art",     null),
+                o.optLong("duration",  0),
+                o.optLong("dateAdded", 0)
+        );
+    }
+
+    // -------------------------------------------------------------------------
+    // File I/O
+    // -------------------------------------------------------------------------
+
+    private static void writeJson(File file, String json) throws IOException {
+        try (BufferedWriter w = new BufferedWriter(new FileWriter(file, false))) {
+            w.write(json);
+        }
+    }
+
+    private static String readFile(File file) throws IOException {
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader r = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = r.readLine()) != null) sb.append(line);
+        }
+        return sb.length() > 0 ? sb.toString() : null;
+    }
 }

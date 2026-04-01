@@ -3,30 +3,35 @@ package com.tunes.player.utils;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+/**
+ * Stores user display name and avatar URI in a single SharedPreferences file,
+ * rather than one file per key.
+ */
 public class UserInfo {
 
-    private static final String NAME_KEY = "UserName";
-    private static final String AVATAR_KEY = "AvatarUri";
+    private static final String PREFS_FILE  = "user_prefs";
+    private static final String KEY_NAME    = "UserName";
+    private static final String KEY_AVATAR  = "AvatarUri";
 
+    private UserInfo() {}
 
     public static void saveUserName(Context context, String name) {
-        SharedPreferences.Editor editor = context.getSharedPreferences(NAME_KEY, Context.MODE_PRIVATE).edit();
-        editor.putString(NAME_KEY, name);
-        editor.apply();
+        prefs(context).edit().putString(KEY_NAME, name).apply();
     }
 
     public static String getUserName(Context context) {
-        return  context.getSharedPreferences(NAME_KEY, Context.MODE_PRIVATE).getString(NAME_KEY, "User");
+        return prefs(context).getString(KEY_NAME, "User");
     }
 
     public static void saveUserProfilePic(Context context, String path) {
-        SharedPreferences.Editor editor = context.getSharedPreferences(AVATAR_KEY, Context.MODE_PRIVATE).edit();
-        editor.putString(AVATAR_KEY, path);
-        editor.apply();
+        prefs(context).edit().putString(KEY_AVATAR, path).apply();
     }
 
     public static String getUserProfilePic(Context context) {
-        return context.getSharedPreferences(AVATAR_KEY, Context.MODE_PRIVATE).getString(AVATAR_KEY, "");
+        return prefs(context).getString(KEY_AVATAR, "");
     }
 
+    private static SharedPreferences prefs(Context context) {
+        return context.getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE);
+    }
 }

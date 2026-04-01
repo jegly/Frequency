@@ -1,9 +1,11 @@
 package com.tunes.player;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ServiceInfo;
 import android.media.MediaMetadata;
 import android.media.browse.MediaBrowser;
 import android.media.session.MediaSession;
@@ -17,7 +19,7 @@ import android.support.v4.media.session.MediaSessionCompat;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.app.ServiceCompat;
+import androidx.core.app.NotificationCompat;
 import androidx.media.session.MediaButtonReceiver;
 
 import com.tunes.player.playback.LocalPlayback;
@@ -29,7 +31,10 @@ import java.util.List;
 
 public class TMS extends MediaBrowserService implements PlaybackManager.PlaybackServiceCallback {
 
-    private static final String TAG = "PMS";
+    private static final String TAG = "TMS";
+    private static final String CHANNEL_ID = "com.tunes.player.STARTUP_CHANNEL_ID";
+    private static final int NOTIFICATION_ID = 412;
+    
     private MediaSession mMediaSession;
     private MediaNotificationManager mNotificationManager;
     private boolean isServiceRunning = false;
@@ -39,7 +44,10 @@ public class TMS extends MediaBrowserService implements PlaybackManager.Playback
     @Nullable
     @Override
     public BrowserRoot onGetRoot(@NonNull String clientPackageName, int clientUid, @Nullable Bundle rootHints) {
-        return new BrowserRoot(getString(R.string.app_name), /* Name visible in Android Auto*/null);
+        if (!clientPackageName.equals(getPackageName())) {
+            return null;
+        }
+        return new BrowserRoot(getString(R.string.app_name), null);
     }
 
     @Override
@@ -50,7 +58,22 @@ public class TMS extends MediaBrowserService implements PlaybackManager.Playback
     @Override
     public void onCreate() {
         super.onCreate();
-        mServiceThread = new HandlerThread("PMS Thread", Thread.NORM_PRIORITY);
+
+        mMediaSession = new MediaSession(getApplicationContext(), TAG);
+
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            flags |= PendingIntent.FLAG_IMMUTABLE;
+        }
+        Intent mediaButtonIntent = new Intent(Intent.ACTION_MEDIA_BUTTON);
+        mediaButtonIntent.setClass(getApplicationContext(), MediaButtonReceiver.class);
+        PendingIntent mbrIntent = PendingIntent.getBroadcast(this, 0, mediaButtonIntent, flags);
+        mMediaSession.setMediaButtonReceiver(mbrIntent);
+        mMediaSession.setFlags(MediaSession.FLAG_HANDLES_MEDIA_BUTTONS | MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS);
+
+        setSessionToken(mMediaSession.getSessionToken());
+
+        mServiceThread = new HandlerThread("TMS-Worker", Thread.NORM_PRIORITY);
         mServiceThread.start();
         mWorkerHandler = new Handler(mServiceThread.getLooper());
         mWorkerHandler.post(this::runOnServiceThread);
@@ -59,31 +82,45 @@ public class TMS extends MediaBrowserService implements PlaybackManager.Playback
     private void runOnServiceThread() {
         TrackManager mTrackManager = TrackManager.getInstance();
         LocalPlayback playback = new LocalPlayback(this, mTrackManager, mWorkerHandler);
-        PlaybackManager mPlaybackManager = new PlaybackManager(this.getApplicationContext(), playback, mTrackManager, this/*, mWorkerHandler*/);
+        PlaybackManager mPlaybackManager = new PlaybackManager(
+                getApplicationContext(), playback, mTrackManager, this);
 
-        mMediaSession = new MediaSession(this.getApplicationContext(), TAG);
-        setSessionToken(mMediaSession.getSessionToken());
         mMediaSession.setCallback(mPlaybackManager.getSessionCallbacks(), mWorkerHandler);
-        mMediaSession.setFlags(MediaSession.FLAG_HANDLES_MEDIA_BUTTONS | MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS);
-
-        Intent mediaButtonIntent = new Intent(Intent.ACTION_MEDIA_BUTTON);
-        mediaButtonIntent.setClass(getApplicationContext(), MediaButtonReceiver.class);
-        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            flags |= PendingIntent.FLAG_IMMUTABLE;
-        }
-        PendingIntent mbrIntent = PendingIntent.getBroadcast(this, 0, mediaButtonIntent, flags);
-        mMediaSession.setMediaButtonReceiver(mbrIntent);
         mNotificationManager = new MediaNotificationManager(this);
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null && mMediaSession != null) {
-            MediaButtonReceiver.handleIntent(MediaSessionCompat.fromMediaSession(this, mMediaSession), intent);
+            MediaButtonReceiver.handleIntent(
+                    MediaSessionCompat.fromMediaSession(this, mMediaSession), intent);
         }
+        
+        // Fix for ANR: Ensure startForeground is called within 5 seconds of startForegroundService
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            createStartupChannel();
+            Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
+                    .setSmallIcon(R.drawable.ic_notification)
+                    .setContentTitle("Tunes")
+                    .setContentText("Initializing...")
+                    .setPriority(NotificationCompat.PRIORITY_MIN)
+                    .build();
+            startForeground(NOTIFICATION_ID, notification);
+        }
+        
         isServiceRunning = true;
         return START_NOT_STICKY;
+    }
+
+    private void createStartupChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            if (nm != null && nm.getNotificationChannel(CHANNEL_ID) == null) {
+                NotificationChannel channel = new NotificationChannel(
+                        CHANNEL_ID, "Tunes Service", NotificationManager.IMPORTANCE_MIN);
+                nm.createNotificationChannel(channel);
+            }
+        }
     }
 
     @Override
@@ -124,6 +161,7 @@ public class TMS extends MediaBrowserService implements PlaybackManager.Playback
             mMediaSession.setActive(false);
         }
         isServiceRunning = false;
+        stopForeground(true);
     }
 
     @Override

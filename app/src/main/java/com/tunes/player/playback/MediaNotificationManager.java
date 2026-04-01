@@ -52,7 +52,7 @@ public class MediaNotificationManager extends BroadcastReceiver {
     private MediaSession.Token mSessionToken;
     private MediaController mController;
     private MediaController.TransportControls mTransportControls;
-    public boolean mStarted;
+    private boolean mStarted;
     private boolean mInitialised = false;
     private PlaybackState mPlaybackState;
     private MediaMetadata mMetadata;
@@ -121,10 +121,10 @@ public class MediaNotificationManager extends BroadcastReceiver {
         
         if (mPlaybackState.getState() == PlaybackState.STATE_PLAYING) {
             mService.startForeground(NOTIFICATION_ID, notification);
-        } else if (mPlaybackState.getState() == PlaybackState.STATE_PAUSED) {
+        } else {
+            // Stop foreground but keep the notification, allowing it to be swiped away if paused
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                // Using literal value 2 for STOP_FOREGROUND_DETACH to avoid symbol resolution issues
-                mService.stopForeground(2); 
+                mService.stopForeground(android.app.Service.STOP_FOREGROUND_DETACH); 
             } else {
                 mService.stopForeground(false);
             }
@@ -177,7 +177,7 @@ public class MediaNotificationManager extends BroadcastReceiver {
                 filter.addAction(ACTION_STOP);
                 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    mService.registerReceiver(this, filter, Context.RECEIVER_EXPORTED);
+                    mService.registerReceiver(this, filter, Context.RECEIVER_NOT_EXPORTED);
                 } else {
                     mService.registerReceiver(this, filter);
                 }
@@ -247,12 +247,12 @@ public class MediaNotificationManager extends BroadcastReceiver {
             mStarted = false;
             if (mController != null) mController.unregisterCallback(mCb);
             try {
-                mNotificationManager.cancel(NOTIFICATION_ID);
                 mService.unregisterReceiver(this);
             } catch (IllegalArgumentException ex) {
                 // ignore if the receiver is not registered.
             }
             mService.stopForeground(true);
+            mNotificationManager.cancel(NOTIFICATION_ID);
         }
     }
 

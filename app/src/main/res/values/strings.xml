@@ -22,7 +22,7 @@
     <string name="tracks_num">tracks</string>
     <string name="recent">Recent tracks</string>
     <string name="no_recent_tracks">Listen to some music and check back in</string>
-    <string name="select_track">Select track</string>
+    <string name="select_track">Import File/Folder</string>
     <string name="recent_artist">Haven\'t heard them in a while </string>
     <string name="nostalgic">Feeling nostalgic</string>
     <string name="playlist_nav">Playlist</string>
@@ -42,6 +42,8 @@
     <string name="added_to_fav">Track added to favorites</string>
     <string name="repeat_enabled">Current track will be repeated once</string>
     <string name="repeat_disabled">Repeat mode turned off</string>
+    <string name="loop_enabled">Infinite loop enabled</string>
+    <string name="loop_disabled">Infinite loop disabled</string>
     <string name="shuffle_enabled">Shuffle enabled</string>
     <string name="shuffle_disabled">Shuffle disabled</string>
     <string name="equalizer_error">Default equalizer not found</string>

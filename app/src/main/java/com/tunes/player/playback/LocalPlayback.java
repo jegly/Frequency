@@ -17,8 +17,10 @@ import android.os.Handler;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyCallback;
 import android.telephony.TelephonyManager;
+import android.util.Log;
 import android.widget.Toast;
 
+import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
 
 import com.tunes.player.model.MusicModel;
@@ -32,9 +34,11 @@ public class LocalPlayback implements
         MediaPlayer.OnPreparedListener,
         AudioManager.OnAudioFocusChangeListener {
 
+    private static final String TAG = "LocalPlayback";
+
     private final IntentFilter filter = new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
-    private Context mContext;
-    private AudioManager mAudioManager;
+    private final Context mContext;
+    private final AudioManager mAudioManager;
     private Playback.Callback mPlaybackCallback;
     private MediaPlayer mp;
     private int resumePosition = -1;
@@ -53,7 +57,7 @@ public class LocalPlayback implements
     };
     private PhoneStateListener mPhoneStateListener;
     private Object mTelephonyCallback; // Using Object to handle different API versions
-    private TrackManager mTrackManager;
+    private final TrackManager mTrackManager;
     private int mMediaId = -99;
     private Handler mHandler;
     private boolean mDelayedPlayback = false;
@@ -79,16 +83,21 @@ public class LocalPlayback implements
     private void initMediaPlayer() {
         if (mp != null) {
             try {
-                mp.reset();
                 mp.release();
             } catch (Exception e) {
-                e.printStackTrace();
+                Log.e(TAG, "Error releasing MediaPlayer", e);
             }
             mp = null;
         }
         mp = new MediaPlayer();
         mp.setOnPreparedListener(this);
         mp.setOnCompletionListener(this);
+
+        // We explicitly do NOT use mp.setLooping(true) because it prevents onCompletion() from being called.
+        // Without onCompletion(), the PlaybackManager and UI aren't notified that the track has finished,
+        // which causes the progress bar to get stuck at the end.
+        // Looping is instead handled by returning 'true' in TrackManager.canSkipTrack()
+        // and letting PlaybackManager call handlePlay() again to restart the same track.
         
         MusicModel activeItem = mTrackManager.getActiveQueueItem();
         if (activeItem == null || activeItem.getSongPath() == null) {
@@ -100,7 +109,7 @@ public class LocalPlayback implements
             mp.setDataSource(mContext, Uri.parse(activeItem.getSongPath()));
             mp.prepareAsync();
         } catch (IOException | IllegalArgumentException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Playback error", e);
             Toast.makeText(mContext, "Music file error", Toast.LENGTH_LONG).show();
             if (mPlaybackCallback != null) mPlaybackCallback.onPlaybackCompletion();
         }
@@ -140,7 +149,7 @@ public class LocalPlayback implements
                 mPlaybackState = PlaybackState.STATE_PLAYING;
                 if (mPlaybackCallback != null) mPlaybackCallback.onPlaybackStateChanged(mPlaybackState);
             } catch (IllegalStateException e) {
-                e.printStackTrace();
+                Log.e(TAG, "Playback error", e);
                 initMediaPlayer();
             }
         }
@@ -153,6 +162,8 @@ public class LocalPlayback implements
 
     @Override
     public void onCompletion(MediaPlayer mp) {
+        // Track finished naturally. Notify PlaybackManager.
+        // PlaybackManager will check with TrackManager and decide whether to restart this track or stop.
         onStop(false);
         if (mPlaybackCallback != null) mPlaybackCallback.onPlaybackCompletion();
     }
@@ -182,10 +193,9 @@ public class LocalPlayback implements
         if (mp != null) {
             try {
                 if (mp.isPlaying()) mp.stop();
-                mp.reset();
                 mp.release();
             } catch (Exception e) {
-                e.printStackTrace();
+                Log.e(TAG, "Error stopping MediaPlayer", e);
             }
             mp = null;
         }
@@ -194,7 +204,7 @@ public class LocalPlayback implements
             try {
                 mContext.unregisterReceiver(becomingNoisyReceiver);
             } catch (Exception e) {
-                e.printStackTrace();
+                Log.e(TAG, "Playback error", e);
             }
             isBecomingNoisyReceiverRegistered = false;
         }
@@ -365,6 +375,7 @@ public class LocalPlayback implements
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.S)
     private class CallStateCallback extends TelephonyCallback implements TelephonyCallback.CallStateListener {
         @Override
         public void onCallStateChanged(int state) {

@@ -2,9 +2,9 @@ package com.tunes.player.activities;
 
 import android.graphics.Color;
 import android.media.session.MediaController;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
 import android.widget.PopupMenu;
 import android.widget.TextView;
@@ -25,22 +25,27 @@ import com.tunes.player.singleton.TrackManager;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-public class SearchActivity extends MediaSessionActivity implements ItemClickListener.Simple, AsyncTaskCallback.Simple {
+/** Replaced inner AsyncSearchTask with ExecutorService + main-thread Handler. */
+public class SearchActivity extends MediaSessionActivity
+        implements ItemClickListener.Simple, AsyncTaskCallback.Simple {
+
+    private static final ExecutorService sExecutor = Executors.newSingleThreadExecutor();
+    private static final Handler sMainHandler  = new Handler(Looper.getMainLooper());
 
     private List<MusicModel> mSearchResult;
     private final List<String> pendingUpdates = new ArrayList<>();
     private SearchAdapter adapter;
     private TextView tv;
     private TrackManager tm;
-    private final Handler mHandler = new Handler();
     private String mQuery = "";
     private RecyclerView rv;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         overridePendingTransition(R.anim.activity_fade_in, R.anim.activity_fade_out);
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
 
@@ -64,21 +69,15 @@ public class SearchActivity extends MediaSessionActivity implements ItemClickLis
     private void setUpSearchView() {
         SearchView sv = findViewById(R.id.search_view);
         View v = sv.findViewById(androidx.appcompat.R.id.search_plate);
-        if (v != null) {
-            v.setBackgroundColor(Color.parseColor("#00000000"));
-        }
+        if (v != null) v.setBackgroundColor(Color.parseColor("#00000000"));
         sv.setIconified(false);
         sv.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                if (!query.equals(mQuery))
-                    searchSuggestions(query);
+            @Override public boolean onQueryTextSubmit(String query) {
+                if (!query.equals(mQuery)) searchSuggestions(query);
                 sv.clearFocus();
                 return true;
             }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
+            @Override public boolean onQueryTextChange(String newText) {
                 searchSuggestions(newText);
                 return true;
             }
@@ -88,25 +87,48 @@ public class SearchActivity extends MediaSessionActivity implements ItemClickLis
     private void searchSuggestions(String query) {
         mQuery = query;
         pendingUpdates.add(mQuery);
-        if (pendingUpdates.size() == 1)
-            new AsyncSearchTask(query, this).execute();
+        if (pendingUpdates.size() == 1) runSearch(query);
+    }
+
+    private void runSearch(String query) {
+        sExecutor.execute(() -> {
+            List<MusicModel> results = filter(query);
+            sMainHandler.post(() -> onTaskComplete(results));
+        });
     }
 
     @Override
     public void onTaskComplete(List<MusicModel> list) {
         if (pendingUpdates.isEmpty()) return;
         pendingUpdates.remove(0);
-        this.mSearchResult = list;
+        mSearchResult = list;
 
-        if (mSearchResult.isEmpty()) tv.setVisibility(View.VISIBLE);
-        else tv.setVisibility(View.GONE);
-
+        tv.setVisibility(mSearchResult.isEmpty() ? View.VISIBLE : View.GONE);
         adapter.updateItems(list);
 
         if (!pendingUpdates.isEmpty()) {
-            searchSuggestions(pendingUpdates.get(pendingUpdates.size() - 1));
+            String next = pendingUpdates.get(pendingUpdates.size() - 1);
             pendingUpdates.clear();
+            searchSuggestions(next);
         }
+    }
+
+    private List<MusicModel> filter(String text) {
+        List<MusicModel> out = new ArrayList<>();
+        List<MusicModel> source = TrackManager.getInstance().getMainList();
+        if (text == null || text.isEmpty() || source == null) return out;
+        String q = text.toLowerCase();
+        for (MusicModel m : source) {
+            String name   = m.getSongName();
+            String album  = m.getAlbum();
+            String artist = m.getArtist();
+            if ((name   != null && name.toLowerCase().contains(q))   ||
+                (album  != null && album.toLowerCase().contains(q))  ||
+                (artist != null && artist.toLowerCase().contains(q))) {
+                out.add(m);
+            }
+        }
+        return out;
     }
 
     private void setRecyclerView() {
@@ -132,15 +154,9 @@ public class SearchActivity extends MediaSessionActivity implements ItemClickLis
         pm.getMenuInflater().inflate(R.menu.item_overflow__menu, pm.getMenu());
         pm.setOnMenuItemClickListener(item -> {
             int itemId = item.getItemId();
-            if (itemId == R.id.id_play_next) {
-                tm.playNext(mSearchResult.get(position));
-            } else if (itemId == R.id.id_add_queue) {
-                tm.addToActiveQueue(mSearchResult.get(position));
-            } else if (itemId == R.id.id_add_playlist) {
-                // Add to playlist logic
-            } else if (itemId == R.id.info) {
-                createDialog(position);
-            }
+            if      (itemId == R.id.id_play_next)   tm.playNext(mSearchResult.get(position));
+            else if (itemId == R.id.id_add_queue)   tm.addToActiveQueue(mSearchResult.get(position));
+            else if (itemId == R.id.info)            createDialog(position);
             return true;
         });
         pm.show();
@@ -148,20 +164,18 @@ public class SearchActivity extends MediaSessionActivity implements ItemClickLis
 
     private void createDialog(int pos) {
         if (mSearchResult == null || pos < 0 || pos >= mSearchResult.size()) return;
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
         MusicModel md = mSearchResult.get(pos);
-        builder.setTitle(md.getSongName());
-        String s = getString(R.string.album_head) + " " + md.getAlbum() + "\n" + getString(R.string.artist_head) + " " + md.getArtist();
-        builder.setMessage(s);
-        builder.setPositiveButton("Done", (dialog, which) -> dialog.dismiss());
-        AlertDialog dialog = builder.create();
-        dialog.show();
-
+        String msg = getString(R.string.album_head)  + " " + md.getAlbum()  + "\n"
+                   + getString(R.string.artist_head) + " " + md.getArtist();
+        new AlertDialog.Builder(this)
+                .setTitle(md.getSongName())
+                .setMessage(msg)
+                .setPositiveButton("Done", (d, w) -> d.dismiss())
+                .create().show();
     }
 
     @Override
-    public void onMediaServiceConnected(MediaController controller) {
-    }
+    public void onMediaServiceConnected(MediaController controller) {}
 
     @Override
     protected void onDestroy() {
@@ -169,46 +183,5 @@ public class SearchActivity extends MediaSessionActivity implements ItemClickLis
         pendingUpdates.clear();
         disconnectFromMediaSession();
         if (rv != null) rv.setAdapter(null);
-    }
-
-    static class AsyncSearchTask extends AsyncTask<Void, Void, List<MusicModel>> {
-
-        private final List<MusicModel> listToReturn = new ArrayList<>();
-        private final AsyncTaskCallback.Simple mCallback;
-        private String mText;
-
-        AsyncSearchTask(String q, AsyncTaskCallback.Simple callback) {
-            mText = q;
-            this.mCallback = callback;
-        }
-
-        private List<MusicModel> filter() {
-            List<MusicModel> listToWorkOn = TrackManager.getInstance().getMainList();
-            listToReturn.clear();
-            if (mText != null && !mText.isEmpty() && null != listToWorkOn) {
-                mText = mText.toLowerCase();
-                for (MusicModel musicModel : listToWorkOn) {
-                    String name = musicModel.getSongName();
-                    String album = musicModel.getAlbum();
-                    String artist = musicModel.getArtist();
-                    if ((name != null && name.toLowerCase().contains(mText)) ||
-                            (album != null && album.toLowerCase().contains(mText)) ||
-                            (artist != null && artist.toLowerCase().contains(mText))) {
-                        listToReturn.add(musicModel);
-                    }
-                }
-            }
-            return listToReturn;
-        }
-
-        @Override
-        protected List<MusicModel> doInBackground(Void... voids) {
-            return filter();
-        }
-
-        @Override
-        protected void onPostExecute(List<MusicModel> musicModels) {
-            if (mCallback != null) mCallback.onTaskComplete(musicModels);
-        }
     }
 }
