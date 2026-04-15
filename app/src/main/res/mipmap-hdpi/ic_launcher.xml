@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    
+    <!-- Dark background -->
+    <path
+        android:fillColor="#1A237E"
+        android:pathData="M0,0h48v48h-48z" />
+    
+    <!-- Simplified rainbow arc -->
+    <path
+        android:fillColor="#FF0000"
+        android:pathData="M8,32 L8,28 L12,28 L12,24 L16,24 L16,20 L20,20 L20,24 L24,24 L24,28 L28,28 L28,32 L40,32 L40,36 L8,36 Z" />
+    
+    <path
+        android:fillColor="#FFA500"
+        android:pathData="M12,28 L12,24 L16,24 L16,20 L20,20 L20,24 L24,24 L24,28 L28,28 L28,32 L12,32 Z" />
+    
+    <path
+        android:fillColor="#FFFF00"
+        android:pathData="M16,24 L16,20 L20,20 L20,24 L24,24 L24,28 L16,28 Z" />
+    
+    <path
+        android:fillColor="#00FF00"
+        android:pathData="M20,20 L20,24 L24,24 L24,28 L20,28 Z" />
+    
+    <!-- Simple sun -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M20,12 L20,8 L24,8 L24,12 L28,12 L28,16 L24,16 L24,20 L20,20 L20,16 L16,16 L16,12 Z" />
+    
+</vector>

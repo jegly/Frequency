@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.tunes.player.app-mergeDebugResources-76:/values-w320dp-land-v13/values-w320dp-land-v13.xml",
+            "map": [
+                {
+                    "source": "/home/computeruser/.gradle/caches/8.13/transforms/46757e5c45f9e2d9820783e1006d17f9/transformed/material-1.12.0/res/values-w320dp-land-v13/values-w320dp-land-v13.xml",
+                    "from": {
+                        "startLines": "2,3",
+                        "startColumns": "4,4",
+                        "startOffsets": "55,110",
+                        "endColumns": "54,61",
+                        "endOffsets": "105,167"
+                    }
+                }
+            ]
+        }
+    ]
+}

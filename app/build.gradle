@@ -1,25 +1,38 @@
 plugins {
     id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+    id 'kotlin-kapt'
 }
-
-ext.versionMajor = 1
-ext.versionMinor = 0
-ext.versionPatch = 0
-ext.minimumSdkVersion = 21
 
 android {
     namespace 'com.tunes.player'
-    compileSdk 35
+    compileSdk 36
 
     defaultConfig {
         applicationId "com.tunes.player"
-        minSdk project.ext.minimumSdkVersion
-        targetSdk 35
+        minSdk 24
+        targetSdk 36
         versionCode 1
-        versionName "1.0.0"
-        vectorDrawables.useSupportLibrary = true
-        resConfigs 'en'
+        versionName "5.0.0"
+
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        vectorDrawables {
+            useSupportLibrary true
+        }
+    }
+
+    sourceSets {
+        main {
+            java {
+                // Completely ignore all old Java files to prevent conflicts and warnings
+                exclude '**/*.java'
+            }
+            res {
+                // Exclude the adaptive XML icons that are blocking the pixelated rainbow PNGs
+                exclude '**/mipmap-anydpi-v26/ic_launcher.xml'
+                exclude '**/mipmap-anydpi-v26/ic_launcher_round.xml'
+            }
+        }
     }
 
     buildTypes {
@@ -28,37 +41,70 @@ android {
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
-        debug {
-            applicationIdSuffix ".debug"
-            versionNameSuffix "-debug"
-        }
     }
-
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
-
+    kotlinOptions {
+        jvmTarget = '17'
+    }
     buildFeatures {
+        compose true
         buildConfig true
-        viewBinding true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion '1.5.8'
+    }
+    packaging {
+        resources {
+            excludes += '/META-INF/{AL2.0,LGPL2.1}'
+        }
     }
 }
 
 dependencies {
-    implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
-    implementation 'androidx.core:core:1.15.0'
-    implementation 'androidx.appcompat:appcompat:1.7.0'
-    implementation 'androidx.coordinatorlayout:coordinatorlayout:1.2.0'
-    implementation 'androidx.documentfile:documentfile:1.0.1'
-
-    implementation 'com.github.bumptech.glide:glide:4.16.0'
-    annotationProcessor 'com.github.bumptech.glide:compiler:4.16.0'
-
+    implementation 'androidx.core:core-ktx:1.15.0'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.8.7'
+    implementation 'androidx.activity:activity-compose:1.9.3'
+    implementation platform('androidx.compose:compose-bom:2024.10.01')
+    implementation 'androidx.compose.ui:ui'
+    implementation 'androidx.compose.ui:ui-graphics'
+    implementation 'androidx.compose.ui:ui-tooling-preview'
+    implementation 'androidx.compose.material3:material3'
+    
+    // Adaptive Dependencies
+    implementation 'androidx.compose.material3.adaptive:adaptive:1.0.0'
+    implementation 'androidx.compose.material3.adaptive:adaptive-layout:1.0.0'
+    implementation 'androidx.compose.material3.adaptive:adaptive-navigation:1.0.0'
+    implementation 'androidx.compose.material3:material3-adaptive-navigation-suite:1.3.1'
+    
+    implementation 'androidx.compose.material:material-icons-extended'
+    
+    // Navigation
+    implementation 'androidx.navigation:navigation-compose:2.8.3'
+    
+    // Coroutines
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0'
+    
+    // Biometric
+    implementation 'androidx.biometric:biometric:1.2.0-alpha05'
+    
+    // Media
     implementation 'androidx.media:media:1.7.0'
-    implementation 'com.google.android.material:material:1.12.0'
+    
+    // Image loading
+    implementation 'com.github.bumptech.glide:glide:4.16.0'
+    kapt 'com.github.bumptech.glide:compiler:4.16.0'
+    implementation 'com.github.bumptech.glide:compose:1.0.0-beta01'
 
+    implementation 'com.google.android.material:material:1.12.0'
+    
     testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test:runner:1.6.2'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    androidTestImplementation platform('androidx.compose:compose-bom:2024.10.01')
+    androidTestImplementation 'androidx.compose.ui:ui-test-junit4'
+    debugImplementation 'androidx.compose.ui:ui-tooling'
+    debugImplementation 'androidx.compose.ui:ui-test-manifest'
 }

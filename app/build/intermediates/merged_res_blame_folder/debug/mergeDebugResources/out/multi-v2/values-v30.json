@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.tunes.player.app-mergeDebugResources-76:/values-v30/values-v30.xml",
+            "map": [
+                {
+                    "source": "/home/computeruser/.gradle/caches/8.13/transforms/578ea48f33338de8d7bcbf809a0123cc/transformed/material3-release/res/values-v30/values-v30.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "72",
+                        "endOffsets": "123"
+                    }
+                }
+            ]
+        }
+    ]
+}

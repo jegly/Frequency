@@ -107,10 +107,10 @@
     <!-- Profile Links -->
 
     <!-- App info -->
-    <string name="app_version">App version</string>
+    <string name="app_version">Version 5</string>
 
     <string name="app_release">Release date</string>
-    <string name="app_release_desc">Testing....</string>
+    <string name="app_release_desc">April 15, 2026</string>
 
     <string name="build_number">Build code</string>
 

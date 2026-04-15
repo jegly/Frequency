@@ -1,0 +1,79 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    
+    <!-- Pixelated Rainbow Background -->
+    <!-- Red pixels -->
+    <path
+        android:fillColor="#FF0000"
+        android:pathData="M20,80 L28,80 L28,72 L36,72 L36,64 L44,64 L44,56 L52,56 L52,48 L60,48 L60,56 L68,56 L68,64 L76,64 L76,72 L84,72 L84,80 L92,80 L92,88 L20,88 Z" />
+    
+    <!-- Orange pixels -->
+    <path
+        android:fillColor="#FF8C00"
+        android:pathData="M28,72 L36,72 L36,64 L44,64 L44,56 L52,56 L52,48 L60,48 L60,56 L68,56 L68,64 L76,64 L76,72 L84,72 L84,80 L28,80 Z" />
+    
+    <!-- Yellow pixels -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M36,64 L44,64 L44,56 L52,56 L52,48 L60,48 L60,56 L68,56 L68,64 L76,64 L76,72 L36,72 Z" />
+    
+    <!-- Green pixels -->
+    <path
+        android:fillColor="#00FF00"
+        android:pathData="M44,56 L52,56 L52,48 L60,48 L60,56 L68,56 L68,64 L44,64 Z" />
+    
+    <!-- Blue pixels -->
+    <path
+        android:fillColor="#0080FF"
+        android:pathData="M52,48 L60,48 L60,56 L52,56 Z" />
+    
+    <!-- Purple pixels -->
+    <path
+        android:fillColor="#8000FF"
+        android:pathData="M56,48 L56,52 L60,52 L60,48 L56,48 Z" />
+    
+    <!-- Pixelated Sun -->
+    <!-- Sun center (8x8 pixel block) -->
+    <path
+        android:fillColor="#FFEB3B"
+        android:pathData="M44,24 L44,16 L52,16 L52,24 L60,24 L60,32 L52,32 L52,40 L44,40 L44,32 L36,32 L36,24 Z" />
+    
+    <!-- Sun rays (4x4 pixel blocks) -->
+    <!-- Top ray -->
+    <path
+        android:fillColor="#FFEB3B"
+        android:pathData="M44,8 L52,8 L52,16 L44,16 Z" />
+    
+    <!-- Bottom ray -->
+    <path
+        android:fillColor="#FFEB3B"
+        android:pathData="M44,40 L52,40 L52,48 L44,48 Z" />
+    
+    <!-- Left ray -->
+    <path
+        android:fillColor="#FFEB3B"
+        android:pathData="M28,24 L36,24 L36,32 L28,32 Z" />
+    
+    <!-- Right ray -->
+    <path
+        android:fillColor="#FFEB3B"
+        android:pathData="M60,24 L68,24 L68,32 L60,32 Z" />
+    
+    <!-- Diagonal rays -->
+    <path
+        android:fillColor="#FFEB3B"
+        android:pathData="M32,12 L40,12 L40,20 L32,20 Z" />
+    <path
+        android:fillColor="#FFEB3B"
+        android:pathData="M56,12 L64,12 L64,20 L56,20 Z" />
+    <path
+        android:fillColor="#FFEB3B"
+        android:pathData="M32,36 L40,36 L40,44 L32,44 Z" />
+    <path
+        android:fillColor="#FFEB3B"
+        android:pathData="M56,36 L64,36 L64,44 L56,44 Z" />
+    
+</vector>

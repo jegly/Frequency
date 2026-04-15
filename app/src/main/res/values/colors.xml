@@ -2,28 +2,28 @@
 <resources>
 
     <!-- =============================================
-         TUNES — Material 3 Expressive Color System
-         Seed: #006B5F (Deep Teal)
-         Generated M3 tonal palettes
+         TUNES - Material 3 Expressive Color System
+         Enhanced with more vibrant and adaptive colors
+         Primary: Deep Teal with expressive variations
          ============================================= -->
 
-    <!-- Primary Tonal Palette (Teal) -->
-    <color name="md_theme_primary">#006B5F</color>
+    <!-- Primary Tonal Palette (Enhanced Teal) -->
+    <color name="md_theme_primary">#00695C</color>
     <color name="md_theme_onPrimary">#FFFFFF</color>
-    <color name="md_theme_primaryContainer">#76F8E5</color>
-    <color name="md_theme_onPrimaryContainer">#00201C</color>
+    <color name="md_theme_primaryContainer">#5FDBCF</color>
+    <color name="md_theme_onPrimaryContainer">#00201B</color>
 
-    <!-- Secondary Tonal Palette (Blue-grey) -->
-    <color name="md_theme_secondary">#4A6360</color>
+    <!-- Secondary Tonal Palette (Expressive Blue) -->
+    <color name="md_theme_secondary">#4D635D</color>
     <color name="md_theme_onSecondary">#FFFFFF</color>
-    <color name="md_theme_secondaryContainer">#CCE8E4</color>
-    <color name="md_theme_onSecondaryContainer">#051F1D</color>
+    <color name="md_theme_secondaryContainer">#D0E8E2</color>
+    <color name="md_theme_onSecondaryContainer">#061F1C</color>
 
-    <!-- Tertiary Tonal Palette (Violet accent) -->
-    <color name="md_theme_tertiary">#456179</color>
+    <!-- Tertiary Tonal Palette (Vibrant Purple) -->
+    <color name="md_theme_tertiary">#5B5B7E</color>
     <color name="md_theme_onTertiary">#FFFFFF</color>
-    <color name="md_theme_tertiaryContainer">#CCE5FF</color>
-    <color name="md_theme_onTertiaryContainer">#001D33</color>
+    <color name="md_theme_tertiaryContainer">#E2E0FF</color>
+    <color name="md_theme_onTertiaryContainer">#181937</color>
 
     <!-- Error -->
     <color name="md_theme_error">#BA1A1A</color>
@@ -31,22 +31,22 @@
     <color name="md_theme_errorContainer">#FFDAD6</color>
     <color name="md_theme_onErrorContainer">#410002</color>
 
-    <!-- Background & Surface (Light) -->
-    <color name="md_theme_background">#F4FBF9</color>
-    <color name="md_theme_onBackground">#161D1C</color>
-    <color name="md_theme_surface">#F4FBF9</color>
-    <color name="md_theme_onSurface">#161D1C</color>
-    <color name="md_theme_surfaceVariant">#DAE5E2</color>
-    <color name="md_theme_onSurfaceVariant">#3F4947</color>
-    <color name="md_theme_outline">#6F7977</color>
-    <color name="md_theme_outlineVariant">#BEC9C7</color>
-    <color name="md_theme_inverseSurface">#2B3230</color>
-    <color name="md_theme_inverseOnSurface">#EBF2F0</color>
-    <color name="md_theme_inversePrimary">#56DBCA</color>
-    <color name="md_theme_surfaceTint">#006B5F</color>
+    <!-- Background & Surface (Enhanced Light Theme) -->
+    <color name="md_theme_background">#FDFCF7</color>
+    <color name="md_theme_onBackground">#1A1C19</color>
+    <color name="md_theme_surface">#FDFCF7</color>
+    <color name="md_theme_onSurface">#1A1C19</color>
+    <color name="md_theme_surfaceVariant">#DCE5E0</color>
+    <color name="md_theme_onSurfaceVariant">#404944</color>
+    <color name="md_theme_outline">#707974</color>
+    <color name="md_theme_outlineVariant">#C0C9C3</color>
+    <color name="md_theme_inverseSurface">#2F3130</color>
+    <color name="md_theme_inverseOnSurface">#F0F1EC</color>
+    <color name="md_theme_inversePrimary">#5FDBCF</color>
+    <color name="md_theme_surfaceTint">#00695C</color>
     <color name="md_theme_scrim">#000000</color>
 
-    <!-- Surface container levels (M3 expressive) -->
+    <!-- Enhanced Surface Container Levels (M3 Expressive) -->
     <color name="md_theme_surfaceContainerLowest">#FFFFFF</color>
     <color name="md_theme_surfaceContainerLow">#EEF5F3</color>
     <color name="md_theme_surfaceContainer">#E8EFED</color>
@@ -82,38 +82,19 @@
     <color name="md_theme_dark_onSurface">#DDE4E2</color>
     <color name="md_theme_dark_surfaceVariant">#3F4947</color>
     <color name="md_theme_dark_onSurfaceVariant">#BEC9C7</color>
-    <color name="md_theme_dark_outline">#889391</color>
+    <color name="md_theme_dark_outline">#88928E</color>
     <color name="md_theme_dark_outlineVariant">#3F4947</color>
     <color name="md_theme_dark_inverseSurface">#DDE4E2</color>
-    <color name="md_theme_dark_inverseOnSurface">#2B3230</color>
-    <color name="md_theme_dark_inversePrimary">#006B5F</color>
+    <color name="md_theme_dark_inverseOnSurface">#0E1514</color>
+    <color name="md_theme_dark_inversePrimary">#00695C</color>
     <color name="md_theme_dark_surfaceTint">#56DBCA</color>
     <color name="md_theme_dark_scrim">#000000</color>
 
-    <color name="md_theme_dark_surfaceContainerLowest">#090F0F</color>
-    <color name="md_theme_dark_surfaceContainerLow">#161D1C</color>
-    <color name="md_theme_dark_surfaceContainer">#1A2120</color>
-    <color name="md_theme_dark_surfaceContainerHigh">#252B2A</color>
-    <color name="md_theme_dark_surfaceContainerHighest">#303635</color>
-
-    <!-- Navigation bar background colours (used in values-v23/styles.xml) -->
-    <color name="window_background_light">#F4FBF9</color>
-    <color name="window_background_dark">#090F0F</color>
-
-    <!-- Legacy compat colours (keep for XML refs not yet migrated) -->
-    <color name="md_white">#FFFFFF</color>
-    <color name="md_grey_50">#FAFAFA</color>
-    <color name="md_grey_200">#EEEEEE</color>
-    <color name="md_grey_400">#BDBDBD</color>
-    <color name="md_grey_500">#9E9E9E</color>
-    <color name="md_grey_600">#757575</color>
-    <color name="md_grey_700">#616161</color>
-    <color name="md_grey_800">#424242</color>
-    <color name="md_grey_900">#212121</color>
-    <color name="md_grey_1000">#1B1B1B</color>
-    <color name="md_grey_1100">#121212</color>
-    <color name="md_blue_grey_50">#ECEFF1</color>
-    <color name="purple">#6750A4</color>
-    <color name="purple_dark">#D0BCFF</color>
+    <!-- Enhanced Dark Mode Surface Container Levels -->
+    <color name="md_theme_dark_surfaceContainerLowest">#090F0E</color>
+    <color name="md_theme_dark_surfaceContainerLow">#1A211F</color>
+    <color name="md_theme_dark_surfaceContainer">#1F2624</color>
+    <color name="md_theme_dark_surfaceContainerHigh">#2A312F</color>
+    <color name="md_theme_dark_surfaceContainerHighest">#353C3A</color>
 
 </resources>

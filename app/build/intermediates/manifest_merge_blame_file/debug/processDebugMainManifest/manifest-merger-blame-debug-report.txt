@@ -1,0 +1,203 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.tunes.player"
+4    android:versionCode="1"
+5    android:versionName="5.0.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="24"
+9        android:targetSdkVersion="36" />
+10
+11    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+11-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:4:5-75
+11-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:4:22-72
+12    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+12-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:5:5-77
+12-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:5:22-74
+13    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+13-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:6:5-92
+13-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:6:22-89
+14    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+14-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:7:5-72
+14-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:7:22-69
+15    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+15-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:8:5-77
+15-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:8:22-74
+16
+17    <!-- suppress DeprecatedClassUsageInspection -->
+18    <uses-permission android:name="android.permission.USE_FINGERPRINT" />
+18-->[androidx.biometric:biometric:1.2.0-alpha05] /home/computeruser/.gradle/caches/8.13/transforms/1594b9b6a6da8eb2b7ac037a7daadf0e/transformed/biometric-1.2.0-alpha05/AndroidManifest.xml:25:5-74
+18-->[androidx.biometric:biometric:1.2.0-alpha05] /home/computeruser/.gradle/caches/8.13/transforms/1594b9b6a6da8eb2b7ac037a7daadf0e/transformed/biometric-1.2.0-alpha05/AndroidManifest.xml:25:22-71
+19
+20    <permission
+20-->[androidx.core:core:1.15.0] /home/computeruser/.gradle/caches/8.13/transforms/1948b5e25436d8b80d3b4de99cd5836a/transformed/core-1.15.0/AndroidManifest.xml:22:5-24:47
+21        android:name="com.tunes.player.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+21-->[androidx.core:core:1.15.0] /home/computeruser/.gradle/caches/8.13/transforms/1948b5e25436d8b80d3b4de99cd5836a/transformed/core-1.15.0/AndroidManifest.xml:23:9-81
+22        android:protectionLevel="signature" />
+22-->[androidx.core:core:1.15.0] /home/computeruser/.gradle/caches/8.13/transforms/1948b5e25436d8b80d3b4de99cd5836a/transformed/core-1.15.0/AndroidManifest.xml:24:9-44
+23
+24    <uses-permission android:name="com.tunes.player.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+24-->[androidx.core:core:1.15.0] /home/computeruser/.gradle/caches/8.13/transforms/1948b5e25436d8b80d3b4de99cd5836a/transformed/core-1.15.0/AndroidManifest.xml:26:5-97
+24-->[androidx.core:core:1.15.0] /home/computeruser/.gradle/caches/8.13/transforms/1948b5e25436d8b80d3b4de99cd5836a/transformed/core-1.15.0/AndroidManifest.xml:26:22-94
+25
+26    <application
+26-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:10:5-44:19
+27        android:name="com.tunes.player.TunesApp"
+27-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:11:9-33
+28        android:allowBackup="false"
+28-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:12:9-36
+29        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+29-->[androidx.core:core:1.15.0] /home/computeruser/.gradle/caches/8.13/transforms/1948b5e25436d8b80d3b4de99cd5836a/transformed/core-1.15.0/AndroidManifest.xml:28:18-86
+30        android:debuggable="true"
+31        android:enableOnBackInvokedCallback="true"
+31-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:18:9-51
+32        android:extractNativeLibs="false"
+33        android:icon="@mipmap/ic_launcher"
+33-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:13:9-43
+34        android:label="@string/app_name"
+34-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:14:9-41
+35        android:roundIcon="@mipmap/ic_launcher"
+35-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:15:9-48
+36        android:supportsRtl="true"
+36-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:16:9-35
+37        android:theme="@style/Theme.Tunes" >
+37-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:17:9-43
+38        <activity
+38-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:21:9-32:20
+39            android:name="com.tunes.player.activities.MainActivity"
+39-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:22:13-52
+40            android:configChanges="screenLayout|screenSize|smallestScreenSize"
+40-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:25:13-79
+41            android:exported="true"
+41-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:23:13-36
+42            android:launchMode="singleTask"
+42-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:26:13-44
+43            android:theme="@style/Theme.Tunes"
+43-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:24:13-47
+44            android:windowSoftInputMode="adjustResize" >
+44-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:27:13-55
+45            <intent-filter>
+45-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:28:13-31:29
+46                <action android:name="android.intent.action.MAIN" />
+46-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:29:17-69
+46-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:29:25-66
+47
+48                <category android:name="android.intent.category.LAUNCHER" />
+48-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:30:17-77
+48-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:30:27-74
+49            </intent-filter>
+50        </activity>
+51
+52        <service
+52-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:34:9-42:19
+53            android:name="com.tunes.player.TMS"
+53-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:35:13-32
+54            android:exported="true"
+54-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:36:13-36
+55            android:foregroundServiceType="mediaPlayback" >
+55-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:37:13-58
+56            <intent-filter>
+56-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:38:13-41:29
+57                <action android:name="android.media.browse.MediaBrowserService" />
+57-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:39:17-83
+57-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:39:25-80
+58                <action android:name="android.intent.action.MEDIA_BUTTON" />
+58-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:40:17-77
+58-->/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/src/main/AndroidManifest.xml:40:25-74
+59            </intent-filter>
+60        </service>
+61
+62        <activity
+62-->[androidx.compose.ui:ui-tooling-android:1.7.5] /home/computeruser/.gradle/caches/8.13/transforms/bf89b1c1d82ed5a8d44c32e15016569d/transformed/ui-tooling-release/AndroidManifest.xml:23:9-25:39
+63            android:name="androidx.compose.ui.tooling.PreviewActivity"
+63-->[androidx.compose.ui:ui-tooling-android:1.7.5] /home/computeruser/.gradle/caches/8.13/transforms/bf89b1c1d82ed5a8d44c32e15016569d/transformed/ui-tooling-release/AndroidManifest.xml:24:13-71
+64            android:exported="true" />
+64-->[androidx.compose.ui:ui-tooling-android:1.7.5] /home/computeruser/.gradle/caches/8.13/transforms/bf89b1c1d82ed5a8d44c32e15016569d/transformed/ui-tooling-release/AndroidManifest.xml:25:13-36
+65        <activity
+65-->[androidx.compose.ui:ui-test-manifest:1.7.5] /home/computeruser/.gradle/caches/8.13/transforms/03d1f18a7d892540e78981071285fda3/transformed/ui-test-manifest-1.7.5/AndroidManifest.xml:23:9-25:39
+66            android:name="androidx.activity.ComponentActivity"
+66-->[androidx.compose.ui:ui-test-manifest:1.7.5] /home/computeruser/.gradle/caches/8.13/transforms/03d1f18a7d892540e78981071285fda3/transformed/ui-test-manifest-1.7.5/AndroidManifest.xml:24:13-63
+67            android:exported="true" />
+67-->[androidx.compose.ui:ui-test-manifest:1.7.5] /home/computeruser/.gradle/caches/8.13/transforms/03d1f18a7d892540e78981071285fda3/transformed/ui-test-manifest-1.7.5/AndroidManifest.xml:25:13-36
+68
+69        <provider
+69-->[androidx.emoji2:emoji2:1.3.0] /home/computeruser/.gradle/caches/8.13/transforms/feabdd40603e5a2c4a78dd392da861d4/transformed/emoji2-1.3.0/AndroidManifest.xml:24:9-32:20
+70            android:name="androidx.startup.InitializationProvider"
+70-->[androidx.emoji2:emoji2:1.3.0] /home/computeruser/.gradle/caches/8.13/transforms/feabdd40603e5a2c4a78dd392da861d4/transformed/emoji2-1.3.0/AndroidManifest.xml:25:13-67
+71            android:authorities="com.tunes.player.androidx-startup"
+71-->[androidx.emoji2:emoji2:1.3.0] /home/computeruser/.gradle/caches/8.13/transforms/feabdd40603e5a2c4a78dd392da861d4/transformed/emoji2-1.3.0/AndroidManifest.xml:26:13-68
+72            android:exported="false" >
+72-->[androidx.emoji2:emoji2:1.3.0] /home/computeruser/.gradle/caches/8.13/transforms/feabdd40603e5a2c4a78dd392da861d4/transformed/emoji2-1.3.0/AndroidManifest.xml:27:13-37
+73            <meta-data
+73-->[androidx.emoji2:emoji2:1.3.0] /home/computeruser/.gradle/caches/8.13/transforms/feabdd40603e5a2c4a78dd392da861d4/transformed/emoji2-1.3.0/AndroidManifest.xml:29:13-31:52
+74                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+74-->[androidx.emoji2:emoji2:1.3.0] /home/computeruser/.gradle/caches/8.13/transforms/feabdd40603e5a2c4a78dd392da861d4/transformed/emoji2-1.3.0/AndroidManifest.xml:30:17-75
+75                android:value="androidx.startup" />
+75-->[androidx.emoji2:emoji2:1.3.0] /home/computeruser/.gradle/caches/8.13/transforms/feabdd40603e5a2c4a78dd392da861d4/transformed/emoji2-1.3.0/AndroidManifest.xml:31:17-49
+76            <meta-data
+76-->[androidx.lifecycle:lifecycle-process:2.8.7] /home/computeruser/.gradle/caches/8.13/transforms/fcb820ee62a76eb53c99b341232e6438/transformed/lifecycle-process-2.8.7/AndroidManifest.xml:29:13-31:52
+77                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+77-->[androidx.lifecycle:lifecycle-process:2.8.7] /home/computeruser/.gradle/caches/8.13/transforms/fcb820ee62a76eb53c99b341232e6438/transformed/lifecycle-process-2.8.7/AndroidManifest.xml:30:17-78
+78                android:value="androidx.startup" />
+78-->[androidx.lifecycle:lifecycle-process:2.8.7] /home/computeruser/.gradle/caches/8.13/transforms/fcb820ee62a76eb53c99b341232e6438/transformed/lifecycle-process-2.8.7/AndroidManifest.xml:31:17-49
+79            <meta-data
+79-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/computeruser/.gradle/caches/8.13/transforms/0e6b537b212c20a78a872ff461ff7bb8/transformed/profileinstaller-1.3.1/AndroidManifest.xml:29:13-31:52
+80                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+80-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/computeruser/.gradle/caches/8.13/transforms/0e6b537b212c20a78a872ff461ff7bb8/transformed/profileinstaller-1.3.1/AndroidManifest.xml:30:17-85
+81                android:value="androidx.startup" />
+81-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/computeruser/.gradle/caches/8.13/transforms/0e6b537b212c20a78a872ff461ff7bb8/transformed/profileinstaller-1.3.1/AndroidManifest.xml:31:17-49
+82        </provider>
+83
+84        <uses-library
+84-->[androidx.window:window:1.3.0] /home/computeruser/.gradle/caches/8.13/transforms/f5ecd950d6134ec4cf7f612c8a815ade/transformed/window-1.3.0/AndroidManifest.xml:23:9-25:40
+85            android:name="androidx.window.extensions"
+85-->[androidx.window:window:1.3.0] /home/computeruser/.gradle/caches/8.13/transforms/f5ecd950d6134ec4cf7f612c8a815ade/transformed/window-1.3.0/AndroidManifest.xml:24:13-54
+86            android:required="false" />
+86-->[androidx.window:window:1.3.0] /home/computeruser/.gradle/caches/8.13/transforms/f5ecd950d6134ec4cf7f612c8a815ade/transformed/window-1.3.0/AndroidManifest.xml:25:13-37
+87        <uses-library
+87-->[androidx.window:window:1.3.0] /home/computeruser/.gradle/caches/8.13/transforms/f5ecd950d6134ec4cf7f612c8a815ade/transformed/window-1.3.0/AndroidManifest.xml:26:9-28:40
+88            android:name="androidx.window.sidecar"
+88-->[androidx.window:window:1.3.0] /home/computeruser/.gradle/caches/8.13/transforms/f5ecd950d6134ec4cf7f612c8a815ade/transformed/window-1.3.0/AndroidManifest.xml:27:13-51
+89            android:required="false" />
+89-->[androidx.window:window:1.3.0] /home/computeruser/.gradle/caches/8.13/transforms/f5ecd950d6134ec4cf7f612c8a815ade/transformed/window-1.3.0/AndroidManifest.xml:28:13-37
+90
+91        <receiver
+91-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/computeruser/.gradle/caches/8.13/transforms/0e6b537b212c20a78a872ff461ff7bb8/transformed/profileinstaller-1.3.1/AndroidManifest.xml:34:9-52:20
+92            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+92-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/computeruser/.gradle/caches/8.13/transforms/0e6b537b212c20a78a872ff461ff7bb8/transformed/profileinstaller-1.3.1/AndroidManifest.xml:35:13-76
+93            android:directBootAware="false"
+93-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/computeruser/.gradle/caches/8.13/transforms/0e6b537b212c20a78a872ff461ff7bb8/transformed/profileinstaller-1.3.1/AndroidManifest.xml:36:13-44
+94            android:enabled="true"
+94-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/computeruser/.gradle/caches/8.13/transforms/0e6b537b212c20a78a872ff461ff7bb8/transformed/profileinstaller-1.3.1/AndroidManifest.xml:37:13-35
+95            android:exported="true"
+95-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/computeruser/.gradle/caches/8.13/transforms/0e6b537b212c20a78a872ff461ff7bb8/transformed/profileinstaller-1.3.1/AndroidManifest.xml:38:13-36
+96            android:permission="android.permission.DUMP" >
+96-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/computeruser/.gradle/caches/8.13/transforms/0e6b537b212c20a78a872ff461ff7bb8/transformed/profileinstaller-1.3.1/AndroidManifest.xml:39:13-57
+97            <intent-filter>
+97-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/computeruser/.gradle/caches/8.13/transforms/0e6b537b212c20a78a872ff461ff7bb8/transformed/profileinstaller-1.3.1/AndroidManifest.xml:40:13-42:29
+98                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+98-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/computeruser/.gradle/caches/8.13/transforms/0e6b537b212c20a78a872ff461ff7bb8/transformed/profileinstaller-1.3.1/AndroidManifest.xml:41:17-91
+98-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/computeruser/.gradle/caches/8.13/transforms/0e6b537b212c20a78a872ff461ff7bb8/transformed/profileinstaller-1.3.1/AndroidManifest.xml:41:25-88
+99            </intent-filter>
+100            <intent-filter>
+100-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/computeruser/.gradle/caches/8.13/transforms/0e6b537b212c20a78a872ff461ff7bb8/transformed/profileinstaller-1.3.1/AndroidManifest.xml:43:13-45:29
+101                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+101-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/computeruser/.gradle/caches/8.13/transforms/0e6b537b212c20a78a872ff461ff7bb8/transformed/profileinstaller-1.3.1/AndroidManifest.xml:44:17-85
+101-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/computeruser/.gradle/caches/8.13/transforms/0e6b537b212c20a78a872ff461ff7bb8/transformed/profileinstaller-1.3.1/AndroidManifest.xml:44:25-82
+102            </intent-filter>
+103            <intent-filter>
+103-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/computeruser/.gradle/caches/8.13/transforms/0e6b537b212c20a78a872ff461ff7bb8/transformed/profileinstaller-1.3.1/AndroidManifest.xml:46:13-48:29
+104                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+104-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/computeruser/.gradle/caches/8.13/transforms/0e6b537b212c20a78a872ff461ff7bb8/transformed/profileinstaller-1.3.1/AndroidManifest.xml:47:17-88
+104-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/computeruser/.gradle/caches/8.13/transforms/0e6b537b212c20a78a872ff461ff7bb8/transformed/profileinstaller-1.3.1/AndroidManifest.xml:47:25-85
+105            </intent-filter>
+106            <intent-filter>
+106-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/computeruser/.gradle/caches/8.13/transforms/0e6b537b212c20a78a872ff461ff7bb8/transformed/profileinstaller-1.3.1/AndroidManifest.xml:49:13-51:29
+107                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+107-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/computeruser/.gradle/caches/8.13/transforms/0e6b537b212c20a78a872ff461ff7bb8/transformed/profileinstaller-1.3.1/AndroidManifest.xml:50:17-95
+107-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/computeruser/.gradle/caches/8.13/transforms/0e6b537b212c20a78a872ff461ff7bb8/transformed/profileinstaller-1.3.1/AndroidManifest.xml:50:25-92
+108            </intent-filter>
+109        </receiver>
+110    </application>
+111
+112</manifest>

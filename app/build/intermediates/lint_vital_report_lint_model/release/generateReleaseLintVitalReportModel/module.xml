@@ -1,0 +1,18 @@
+<lint-module
+    format="1"
+    dir="/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app"
+    name=":app"
+    type="APP"
+    maven="Tunes:app:unspecified"
+    agpVersion="8.13.2"
+    buildFolder="build"
+    bootClassPath="/home/computeruser/Android/Sdk/platforms/android-36/android.jar:/home/computeruser/Android/Sdk/build-tools/35.0.0/core-lambda-stubs.jar"
+    javaSourceLevel="17"
+    compileTarget="android-36">
+  <lintOptions
+      abortOnError="true"
+      absolutePaths="true"
+      checkReleaseBuilds="true"
+      explainIssues="true"/>
+  <variant name="release"/>
+</lint-module>
