@@ -6,6 +6,7 @@ import android.media.session.MediaSession
 import android.media.session.PlaybackState
 import android.os.Bundle
 import android.os.SystemClock
+import com.tunes.player.utils.AppSettings
 import com.tunes.player.model.MusicModel
 import com.tunes.player.singleton.TrackManager
 
@@ -17,6 +18,7 @@ class PlaybackManager(
 ) : Playback.Callback {
 
     companion object {
+        const val ACTION_SET_SPEED = "com.tunes.player.ACTION_SET_SPEED"
         const val METADATA_TITLE_KEY = MediaMetadata.METADATA_KEY_TITLE
         const val METADATA_ARTIST_KEY = MediaMetadata.METADATA_KEY_ARTIST
         const val METADATA_ALBUM_KEY = MediaMetadata.METADATA_KEY_ALBUM
@@ -66,6 +68,13 @@ class PlaybackManager(
 
             override fun onSeekTo(pos: Long) {
                 playback.onSeekTo(pos)
+            }
+
+            override fun onCustomAction(action: String, extras: Bundle?) {
+                if (action == ACTION_SET_SPEED) {
+                    val speed = extras?.getFloat("speed", 1.0f) ?: 1.0f
+                    playback.setPlaybackSpeed(speed)
+                }
             }
 
             override fun onPlayFromMediaId(mediaId: String?, extras: Bundle?) {
@@ -125,6 +134,17 @@ class PlaybackManager(
 
     override fun onPlaybackCompletion() {
         handleSkipToNext()
+    }
+
+    override fun onTrackChangedSeamlessly() {
+        if (trackManager.canSkipTrack(ACTION_PLAY_NEXT)) {
+            val item = trackManager.getActiveQueueItem() ?: return
+            lastKnownPath = item.songPath
+            publishMetadata(item)
+            serviceCallback.onStartNotification()
+        } else {
+            handleStop()
+        }
     }
 
     override fun onPlaybackStateChanged(state: Int) {

@@ -1,8 +1,8 @@
 package com.tunes.player.activities
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -42,10 +42,9 @@ import com.tunes.player.ui.theme.TunesTheme
 import com.tunes.player.viewmodel.MainViewModel
 import com.tunes.player.utils.AppSettings
 import com.tunes.player.ui.screens.*
-import com.tunes.player.model.PlaylistModel
 
 class MainActivity : AppCompatActivity() {
-    
+
     private lateinit var viewModel: MainViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,21 +54,18 @@ class MainActivity : AppCompatActivity() {
         setContent {
             val context = LocalContext.current
             viewModel = viewModel()
+
+            val accentColorInt by viewModel.accentColor.collectAsState()
+            val accentColor: Color? = if (accentColorInt != AppSettings.ACCENT_NONE)
+                Color(accentColorInt) else null
+
             val isBiometricEnabled = remember { AppSettings.isBiometricEnabled(context) }
             var isAuthenticated by remember { mutableStateOf(!isBiometricEnabled) }
-            
-            // Fixed: No READ_PHONE_STATE. Only Audio files permission.
-            val permissionsToRequest = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                arrayOf(Manifest.permission.READ_MEDIA_AUDIO)
-            } else {
-                arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
-            }
 
             var hasPermission by remember {
                 mutableStateOf(
-                    permissionsToRequest.all {
-                        ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
-                    }
+                    ContextCompat.checkSelfPermission(context, Manifest.permission.READ_MEDIA_AUDIO)
+                            == PackageManager.PERMISSION_GRANTED
                 )
             }
 
@@ -84,21 +80,46 @@ class MainActivity : AppCompatActivity() {
 
             LaunchedEffect(Unit) {
                 if (!hasPermission) {
-                    launcher.launch(permissionsToRequest)
+                    launcher.launch(arrayOf(Manifest.permission.READ_MEDIA_AUDIO))
                 }
+                // Handle intent that launched the activity (e.g. opening a music file)
+                handleIncomingIntent(intent)
             }
 
-            TunesTheme(dynamicColor = true) {
+            TunesTheme(dynamicColor = accentColor == null, accentColor = accentColor) {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    if (!hasPermission) {
-                        PermissionDeniedScreen { launcher.launch(permissionsToRequest) }
-                    } else if (!isAuthenticated) {
-                        BiometricAuthScreen { isAuthenticated = true }
-                    } else {
-                        MainContainer(viewModel)
+                    when {
+                        !hasPermission -> PermissionDeniedScreen { launcher.launch(arrayOf(Manifest.permission.READ_MEDIA_AUDIO)) }
+                        !isAuthenticated -> BiometricAuthScreen { isAuthenticated = true }
+                        else -> MainContainer(viewModel)
                     }
                 }
             }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (::viewModel.isInitialized) {
+            handleIncomingIntent(intent)
+        }
+    }
+
+    private fun handleIncomingIntent(intent: Intent?) {
+        if (intent?.action == Intent.ACTION_VIEW) {
+            intent.data?.let { uri ->
+                if (::viewModel.isInitialized) {
+                    viewModel.playFromUri(uri)
+                }
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (::viewModel.isInitialized) {
+            viewModel.refreshPlaybackState()
         }
     }
 
@@ -109,61 +130,48 @@ class MainActivity : AppCompatActivity() {
         val currentDestination = navBackStackEntry?.destination
         val currentTrack by viewModel.currentTrack.collectAsState()
 
-        // Main content area with padding for bottom navigation
-            Column(modifier = Modifier.fillMaxSize()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .weight(1f)
+        Column(modifier = Modifier.fillMaxSize()) {
+            Box(modifier = Modifier.fillMaxSize().weight(1f)) {
+                NavHost(
+                    navController = navController,
+                    startDestination = "library",
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    NavHost(
-                        navController = navController,
-                        startDestination = "library",
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        composable("library") { LibraryScreen(viewModel) }
-                        composable("playlists") { 
-                            PlaylistsScreen(viewModel) { playlist ->
-                                navController.navigate("playlist/${playlist.id}/${playlist.name}")
-                            }
+                    composable("library") { LibraryScreen(viewModel) }
+                    composable("playlists") {
+                        PlaylistsScreen(viewModel) { playlist ->
+                            navController.navigate("playlist/${playlist.id}/${playlist.name}")
                         }
-                        composable("settings") { SettingsScreen() }
-                        composable("now_playing") { NowPlayingScreen(viewModel) }
-                        composable("playlist/{playlistId}/{playlistName}") { backStackEntry ->
-                            val playlistName = backStackEntry.arguments?.getString("playlistName") ?: "Unknown"
-                            PlaylistScreen(viewModel, playlistName) {
-                                navController.popBackStack()
-                            }
-                        }
+                    }
+                    composable("settings") { SettingsScreen(viewModel) }
+                    composable("now_playing") { NowPlayingScreen(viewModel) }
+                    composable("playlist/{playlistId}/{playlistName}") { backStackEntry ->
+                        val playlistName = backStackEntry.arguments?.getString("playlistName") ?: "Unknown"
+                        PlaylistScreen(viewModel, playlistName) { navController.popBackStack() }
                     }
                 }
-
-                // Mini Player visible globally above bottom bar
-                AnimatedVisibility(
-                    modifier = Modifier.padding(bottom = 16.dp),
-                    visible = currentTrack != null && currentDestination?.route != "now_playing",
-                    enter = slideInVertically { it } + fadeIn(),
-                    exit = slideOutVertically { it } + fadeOut()
-                ) {
-                    MiniPlayer(viewModel) {
-                        navController.navigate("now_playing")
-                    }
-                }
-
-                // Floating Material 3 Bottom Navigation Bar
-                FloatingBottomNavigationBar(
-                    currentDestination = currentDestination?.route,
-                    onNavigationSelected = { route ->
-                        navController.navigate(route) {
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                inclusive = false
-                            }
-                            launchSingleTop = true
-                        }
-                    }
-                )
             }
+
+            AnimatedVisibility(
+                modifier = Modifier.padding(bottom = 16.dp),
+                visible = currentTrack != null && currentDestination?.route != "now_playing",
+                enter = slideInVertically { it } + fadeIn(),
+                exit = slideOutVertically { it } + fadeOut()
+            ) {
+                MiniPlayer(viewModel) { navController.navigate("now_playing") }
+            }
+
+            FloatingBottomNavigationBar(
+                currentDestination = currentDestination?.route,
+                onNavigationSelected = { route ->
+                    navController.navigate(route) {
+                        popUpTo(navController.graph.findStartDestination().id) { inclusive = false }
+                        launchSingleTop = true
+                    }
+                }
+            )
         }
+    }
 
     @Composable
     fun FloatingBottomNavigationBar(
@@ -186,29 +194,12 @@ class MainActivity : AppCompatActivity() {
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Library
-                NavigationItem(
-                    icon = Icons.Default.LibraryMusic,
-                    label = "Library",
-                    selected = currentDestination == "library",
-                    onClick = { onNavigationSelected("library") }
-                )
-
-                // Playlists
-                NavigationItem(
-                    icon = Icons.AutoMirrored.Filled.PlaylistPlay,
-                    label = "Playlists",
-                    selected = currentDestination == "playlists",
-                    onClick = { onNavigationSelected("playlists") }
-                )
-
-                // Settings
-                NavigationItem(
-                    icon = Icons.Default.Settings,
-                    label = "Settings",
-                    selected = currentDestination == "settings",
-                    onClick = { onNavigationSelected("settings") }
-                )
+                NavigationItem(Icons.Default.LibraryMusic, "Library",
+                    currentDestination == "library") { onNavigationSelected("library") }
+                NavigationItem(Icons.AutoMirrored.Filled.PlaylistPlay, "Playlists",
+                    currentDestination == "playlists") { onNavigationSelected("playlists") }
+                NavigationItem(Icons.Default.Settings, "Settings",
+                    currentDestination == "settings") { onNavigationSelected("settings") }
             }
         }
     }
@@ -229,22 +220,14 @@ class MainActivity : AppCompatActivity() {
             Icon(
                 imageVector = icon,
                 contentDescription = label,
-                tint = if (selected) 
-                    MaterialTheme.colorScheme.primary 
-                else 
-                    MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(24.dp)
             )
-            
             Spacer(modifier = Modifier.height(4.dp))
-            
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelSmall,
-                color = if (selected) 
-                    MaterialTheme.colorScheme.primary 
-                else 
-                    MaterialTheme.colorScheme.onSurfaceVariant,
+                color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1
             )
         }
@@ -276,14 +259,32 @@ class MainActivity : AppCompatActivity() {
                     contentScale = ContentScale.Crop
                 )
                 Column(modifier = Modifier.weight(1f).padding(horizontal = 12.dp)) {
-                    Text(text = track?.songName ?: "Unknown", style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(text = track?.artist ?: "Unknown Artist", style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(
+                        text = track?.songName ?: "Unknown",
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = track?.artist ?: "Unknown Artist",
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
-                IconButton(onClick = { viewModel.skipToPrevious() }) { Icon(Icons.Default.SkipPrevious, null) }
+                IconButton(onClick = { viewModel.skipToPrevious() }) {
+                    Icon(Icons.Default.SkipPrevious, null)
+                }
                 IconButton(onClick = { viewModel.togglePlayPause() }) {
-                    Icon(if (playbackState == android.media.session.PlaybackState.STATE_PLAYING) Icons.Default.Pause else Icons.Default.PlayArrow, null)
+                    Icon(
+                        if (playbackState == android.media.session.PlaybackState.STATE_PLAYING)
+                            Icons.Default.Pause else Icons.Default.PlayArrow,
+                        null
+                    )
                 }
-                IconButton(onClick = { viewModel.skipToNext() }) { Icon(Icons.Default.SkipNext, null) }
+                IconButton(onClick = { viewModel.skipToNext() }) {
+                    Icon(Icons.Default.SkipNext, null)
+                }
             }
         }
     }
@@ -295,10 +296,12 @@ class MainActivity : AppCompatActivity() {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(Icons.Default.Storage, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
+            Icon(Icons.Default.Storage, contentDescription = null,
+                modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
             Spacer(modifier = Modifier.height(16.dp))
             Text("Access Required", style = MaterialTheme.typography.headlineMedium)
-            Text("Tunes only needs access to your music files.", textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+            Text("Tunes only needs access to your music files.",
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center)
             Spacer(modifier = Modifier.height(24.dp))
             Button(onClick = onRetry) { Text("Grant Access") }
         }
@@ -312,26 +315,19 @@ class MainActivity : AppCompatActivity() {
             BiometricPrompt(this, executor, object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                     super.onAuthenticationSucceeded(result)
-                    // Refresh playback state after biometric authentication to prevent desynchronization
-                    if (::viewModel.isInitialized) {
-                        viewModel.refreshPlaybackState()
-                    }
+                    if (::viewModel.isInitialized) viewModel.refreshPlaybackState()
                     onAuthenticated()
                 }
             })
         }
-        val promptInfo = BiometricPrompt.PromptInfo.Builder().setTitle("Tunes Lock").setSubtitle("Authenticate to open").setNegativeButtonText("Cancel").build()
+        val promptInfo = BiometricPrompt.PromptInfo.Builder()
+            .setTitle("Tunes Lock")
+            .setSubtitle("Authenticate to open")
+            .setNegativeButtonText("Cancel")
+            .build()
         LaunchedEffect(Unit) { biometricPrompt.authenticate(promptInfo) }
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Button(onClick = { biometricPrompt.authenticate(promptInfo) }) { Text("Unlock Tunes") }
-        }
-    }
-    
-    override fun onResume() {
-        super.onResume()
-        // Force refresh playback state when app resumes to prevent desynchronization
-        if (::viewModel.isInitialized) {
-            viewModel.refreshPlaybackState()
         }
     }
 }

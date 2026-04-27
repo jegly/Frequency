@@ -20,10 +20,14 @@ interface Playback {
 
     fun getPlaybackState(): Int
 
+    fun setPlaybackSpeed(speed: Float)
+
     fun setCallback(callback: Callback)
 
     interface Callback {
         fun onPlaybackCompletion()
+
+        fun onTrackChangedSeamlessly()
 
         fun onPlaybackStateChanged(state: Int)
 

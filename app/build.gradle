@@ -2,18 +2,19 @@ plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
     id 'kotlin-kapt'
+    id 'org.jetbrains.kotlin.plugin.compose'
 }
 
 android {
     namespace 'com.tunes.player'
-    compileSdk 36
+    compileSdk 37
 
     defaultConfig {
         applicationId "com.tunes.player"
-        minSdk 24
-        targetSdk 36
-        versionCode 1
-        versionName "5.0.0"
+        minSdk 35
+        targetSdk 37
+        versionCode 5
+        versionName "5.0.1"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -26,11 +27,6 @@ android {
             java {
                 // Completely ignore all old Java files to prevent conflicts and warnings
                 exclude '**/*.java'
-            }
-            res {
-                // Exclude the adaptive XML icons that are blocking the pixelated rainbow PNGs
-                exclude '**/mipmap-anydpi-v26/ic_launcher.xml'
-                exclude '**/mipmap-anydpi-v26/ic_launcher_round.xml'
             }
         }
     }
@@ -52,9 +48,6 @@ android {
     buildFeatures {
         compose true
         buildConfig true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion '1.5.8'
     }
     packaging {
         resources {
@@ -92,6 +85,7 @@ dependencies {
     
     // Media
     implementation 'androidx.media:media:1.7.0'
+    implementation 'androidx.documentfile:documentfile:1.0.1'
     
     // Image loading
     implementation 'com.github.bumptech.glide:glide:4.16.0'

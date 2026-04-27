@@ -11,6 +11,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
@@ -46,7 +47,6 @@ private val LightColorScheme = lightColorScheme(
     surfaceTint = md_theme_light_surfaceTint,
     outlineVariant = md_theme_light_outlineVariant,
     scrim = md_theme_light_scrim,
-    // Surface Container Colors (M3 Expressive)
     surfaceContainerLowest = Color(0xFFFFFFFF),
     surfaceContainerLow = Color(0xFFEEF5F3),
     surfaceContainer = Color(0xFFE8EFED),
@@ -84,7 +84,6 @@ private val DarkColorScheme = darkColorScheme(
     surfaceTint = md_theme_dark_surfaceTint,
     outlineVariant = md_theme_dark_outlineVariant,
     scrim = md_theme_dark_scrim,
-    // Surface Container Colors (M3 Expressive)
     surfaceContainerLowest = Color(0xFF090F0F),
     surfaceContainerLow = Color(0xFF161D1C),
     surfaceContainer = Color(0xFF1A2120),
@@ -95,23 +94,40 @@ private val DarkColorScheme = darkColorScheme(
 @Composable
 fun TunesTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true, 
+    dynamicColor: Boolean = true,
+    accentColor: Color? = null,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+    val baseColorScheme = when {
+        dynamicColor && accentColor == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
+
+    val colorScheme = if (accentColor != null) {
+        val onAccent = if (accentColor.luminance() > 0.4f) Color(0xFF1A1C19) else Color.White
+        val container = if (darkTheme)
+            accentColor.copy(red = accentColor.red * 0.4f, green = accentColor.green * 0.4f, blue = accentColor.blue * 0.4f)
+        else
+            accentColor.copy(red = minOf(1f, accentColor.red + 0.45f), green = minOf(1f, accentColor.green + 0.45f), blue = minOf(1f, accentColor.blue + 0.45f))
+        baseColorScheme.copy(
+            primary = accentColor,
+            onPrimary = onAccent,
+            primaryContainer = container,
+            onPrimaryContainer = accentColor,
+            inversePrimary = accentColor.copy(alpha = 0.7f),
+        )
+    } else {
+        baseColorScheme
+    }
+
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            // Window appearance is handled by enableEdgeToEdge() in Activity, 
-            // but we ensure status bar icons match the theme.
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
             WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = !darkTheme
         }

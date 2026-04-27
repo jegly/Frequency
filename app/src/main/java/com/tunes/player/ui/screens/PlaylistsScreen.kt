@@ -138,6 +138,7 @@ fun PlaylistItem(
                     when (playlist.name) {
                         "Playing Queue" -> Icons.AutoMirrored.Filled.QueueMusic
                         "Favorite" -> Icons.Default.Favorite
+                        "Recently Played" -> Icons.Default.History
                         else -> Icons.AutoMirrored.Filled.PlaylistPlay
                     }
                 } else Icons.AutoMirrored.Filled.PlaylistPlay,

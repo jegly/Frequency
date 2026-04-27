@@ -38,16 +38,9 @@ class PlaylistManager private constructor() {
             val playlistModels = mutableListOf<PlaylistModel>()
             
             // Add system playlists
-            playlistModels.add(PlaylistModel(
-                id = 0,
-                name = "Playing Queue",
-                isSystemPlaylist = true
-            ))
-            playlistModels.add(PlaylistModel(
-                id = 1,
-                name = "Favorite",
-                isSystemPlaylist = true
-            ))
+            playlistModels.add(PlaylistModel(id = 0, name = "Playing Queue", isSystemPlaylist = true))
+            playlistModels.add(PlaylistModel(id = 1, name = "Favorite", isSystemPlaylist = true))
+            playlistModels.add(PlaylistModel(id = -1, name = "Recently Played", isSystemPlaylist = true))
             
             // Add custom playlists
             titles.forEachIndexed { index, title ->
@@ -134,10 +127,20 @@ class PlaylistManager private constructor() {
     
     suspend fun getPlaylistTracks(context: Context, playlistId: Long): List<MusicModel> = withContext(Dispatchers.IO) {
         when (playlistId) {
-            0L -> emptyList() // Playing queue is handled by TrackManager
+            -1L -> PlaylistStorageManager.getRecentTracks(context)
+            0L -> emptyList()
             1L -> PlaylistStorageManager.getFavorite(context)
             else -> PlaylistStorageManager.getPlaylistTrackAtPosition(context, playlistId.toInt())
         }
+    }
+
+    suspend fun reorderPlaylistTracks(context: Context, playlistId: Long, from: Int, to: Int) = withContext(Dispatchers.IO) {
+        if (playlistId < 2) return@withContext
+        val tracks = getPlaylistTracks(context, playlistId).toMutableList()
+        if (from !in tracks.indices || to !in tracks.indices) return@withContext
+        val item = tracks.removeAt(from)
+        tracks.add(to, item)
+        updatePlaylistTracks(context, playlistId, tracks)
     }
     
     private suspend fun updatePlaylistTracks(context: Context, playlistId: Long, tracks: List<MusicModel>) = withContext(Dispatchers.IO) {

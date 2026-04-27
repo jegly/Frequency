@@ -1,4 +1,0 @@
-#Wed Apr 15 20:36:38 AEST 2026
-base.0=/home/computeruser/Documents/Tunesv4_finished_stable/Tunes/app/build/intermediates/dex/release/minifyReleaseWithR8/classes.dex
-path.0=classes.dex
-renamed.0=classes.dex

@@ -17,6 +17,7 @@ import android.util.Log
 import android.widget.Toast
 import com.tunes.player.model.MusicModel
 import com.tunes.player.singleton.TrackManager
+import com.tunes.player.utils.AppSettings
 
 class LocalPlayback(
     private val context: Context,
@@ -27,6 +28,12 @@ class LocalPlayback(
     MediaPlayer.OnPreparedListener,
     AudioManager.OnAudioFocusChangeListener {
 
+    companion object {
+        @Volatile var audioSessionId: Int = 0
+        private const val CROSSFADE_DURATION_MS = 5000L
+        private const val CROSSFADE_STEPS = 50
+    }
+
     private val filter = IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
     private val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     private var playbackCallback: Playback.Callback? = null
@@ -34,7 +41,13 @@ class LocalPlayback(
     private var resumePosition = -1
     private var isBecomingNoisyReceiverRegistered = false
     private var currentState: Int = 0
-    
+
+    // Gapless / crossfade
+    private var nextMediaPlayer: MediaPlayer? = null
+    private var nextTrackPrepared = false
+    private var isCrossfading = false
+    private var scheduleRunnable: Runnable? = null
+
     private val becomingNoisyReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             if (AudioManager.ACTION_AUDIO_BECOMING_NOISY == intent.action) {
@@ -54,10 +67,9 @@ class LocalPlayback(
     }
 
     private fun initMediaPlayer() {
+        cancelPendingTransitions()
         mediaPlayer?.let {
-            try {
-                it.release()
-            } catch (e: Exception) {
+            try { it.release() } catch (e: Exception) {
                 Log.e("LocalPlayback", "Error releasing MediaPlayer", e)
             }
         }
@@ -65,6 +77,7 @@ class LocalPlayback(
             setOnPreparedListener(this@LocalPlayback)
             setOnCompletionListener(this@LocalPlayback)
         }
+        audioSessionId = mediaPlayer?.audioSessionId ?: 0
 
         val activeItem = trackManager.getActiveQueueItem()
         if (activeItem?.songPath == null) {
@@ -87,11 +100,7 @@ class LocalPlayback(
         if (tryGetAudioFocus()) {
             delayedPlayback = false
             if (!mediaHasChanged) {
-                if (mediaPlayer != null) {
-                    play()
-                } else {
-                    initMediaPlayer()
-                }
+                if (mediaPlayer != null) play() else initMediaPlayer()
             } else {
                 onStop(false)
                 initMediaPlayer()
@@ -111,8 +120,13 @@ class LocalPlayback(
                     resumePosition = -1
                 }
                 it.start()
+                val savedSpeed = AppSettings.getPlaybackSpeed(context)
+                if (savedSpeed != 1.0f) {
+                    try { it.playbackParams = it.playbackParams.setSpeed(savedSpeed) } catch (e: Exception) {}
+                }
                 playbackState = PlaybackState.STATE_PLAYING
                 playbackCallback?.onPlaybackStateChanged(playbackState)
+                scheduleCrossfadeOrGapless()
             } catch (e: IllegalStateException) {
                 Log.e("LocalPlayback", "Playback error", e)
                 initMediaPlayer()
@@ -125,6 +139,40 @@ class LocalPlayback(
     }
 
     override fun onCompletion(mp: MediaPlayer) {
+        if (isCrossfading && mp == mediaPlayer) {
+            // Current player finished during crossfade; next is already playing
+            try { mp.release() } catch (e: Exception) {}
+            mediaPlayer = nextMediaPlayer
+            nextMediaPlayer = null
+            isCrossfading = false
+            nextTrackPrepared = false
+            audioSessionId = mediaPlayer?.audioSessionId ?: 0
+            playbackCallback?.onTrackChangedSeamlessly()
+            scheduleCrossfadeOrGapless()
+            return
+        }
+
+        val crossfadeOn = AppSettings.isCrossfadeEnabled(context)
+        val gaplessOn = AppSettings.isGaplessEnabled(context)
+
+        if (gaplessOn && !crossfadeOn && nextTrackPrepared && nextMediaPlayer != null && mp == mediaPlayer) {
+            // Gapless: swap players instantly with no gap
+            try { mp.release() } catch (e: Exception) {}
+            mediaPlayer = nextMediaPlayer!!
+            mediaPlayer?.setOnCompletionListener(this)
+            nextMediaPlayer = null
+            nextTrackPrepared = false
+            audioSessionId = mediaPlayer?.audioSessionId ?: 0
+            mediaPlayer?.start()
+            playbackState = PlaybackState.STATE_PLAYING
+            playbackCallback?.onPlaybackStateChanged(playbackState)
+            playbackCallback?.onTrackChangedSeamlessly()
+            scheduleCrossfadeOrGapless()
+            return
+        }
+
+        // Normal completion
+        cancelPendingTransitions()
         onStop(false)
         playbackCallback?.onPlaybackCompletion()
     }
@@ -148,6 +196,7 @@ class LocalPlayback(
     }
 
     override fun onStop(abandonAudioFocus: Boolean) {
+        cancelPendingTransitions()
         if (abandonAudioFocus) abandonAudioFocus()
 
         mediaPlayer?.let {
@@ -161,35 +210,23 @@ class LocalPlayback(
         }
 
         if (isBecomingNoisyReceiverRegistered) {
-            try {
-                context.unregisterReceiver(becomingNoisyReceiver)
-            } catch (e: Exception) {
-                Log.e("LocalPlayback", "Playback error", e)
+            try { context.unregisterReceiver(becomingNoisyReceiver) } catch (e: Exception) {
+                Log.e("LocalPlayback", "Unregister error", e)
             }
             isBecomingNoisyReceiverRegistered = false
         }
 
-        // Always set state to STOPPED when stopping playback
         playbackState = PlaybackState.STATE_STOPPED
         playbackCallback?.onPlaybackStateChanged(playbackState)
-        
-        if (abandonAudioFocus) {
-            abandonAudioFocus()
-        }
+
+        if (abandonAudioFocus) abandonAudioFocus()
     }
-    
-    // Add method to force reset playback state
+
     fun resetPlaybackState() {
         mediaPlayer?.let {
-            try {
-                if (it.isPlaying) it.stop()
-                it.release()
-            } catch (e: Exception) {
-                Log.e("LocalPlayback", "Error resetting MediaPlayer", e)
-            }
+            try { if (it.isPlaying) it.stop(); it.release() } catch (e: Exception) {}
             mediaPlayer = null
         }
-        
         playbackState = PlaybackState.STATE_STOPPED
         playbackCallback?.onPlaybackStateChanged(playbackState)
         resumePosition = -1
@@ -197,35 +234,125 @@ class LocalPlayback(
     }
 
     override fun getActiveMediaId(): Long = mediaId
-
-    override fun isPlaying(): Boolean {
-        return try {
-            mediaPlayer?.isPlaying ?: false
-        } catch (e: IllegalStateException) {
-            false
-        }
-    }
-
-    override fun getCurrentStreamingPosition(): Long {
-        return try {
-            mediaPlayer?.currentPosition?.toLong() ?: 0L
-        } catch (e: IllegalStateException) {
-            0L
-        }
-    }
-
+    override fun isPlaying(): Boolean = try { mediaPlayer?.isPlaying ?: false } catch (e: IllegalStateException) { false }
+    override fun getCurrentStreamingPosition(): Long = try { mediaPlayer?.currentPosition?.toLong() ?: 0L } catch (e: IllegalStateException) { 0L }
     override fun getPlaybackState(): Int = playbackState
+
+    override fun setPlaybackSpeed(speed: Float) {
+        try {
+            val mp = mediaPlayer ?: return
+            mp.playbackParams = mp.playbackParams.setSpeed(speed)
+        } catch (e: Exception) {
+            Log.e("LocalPlayback", "setPlaybackSpeed failed", e)
+        }
+    }
+
+    // ── Gapless / Crossfade ───────────────────────────────────────
+
+    private fun peekNextTrack(): MusicModel? {
+        val list = trackManager.activeList.value
+        val nextIndex = trackManager.getActiveIndex() + 1
+        return if (nextIndex < list.size) list[nextIndex] else null
+    }
+
+    private fun cancelPendingTransitions() {
+        isCrossfading = false
+        nextTrackPrepared = false
+        scheduleRunnable?.let { workerHandler.removeCallbacks(it) }
+        scheduleRunnable = null
+        nextMediaPlayer?.let {
+            try { if (it.isPlaying) it.stop(); it.release() } catch (e: Exception) {}
+        }
+        nextMediaPlayer = null
+    }
+
+    private fun scheduleCrossfadeOrGapless() {
+        val crossfadeEnabled = AppSettings.isCrossfadeEnabled(context)
+        val gaplessEnabled = AppSettings.isGaplessEnabled(context)
+        if (!crossfadeEnabled && !gaplessEnabled) return
+        if (peekNextTrack() == null) return
+
+        val prepareAheadMs = if (crossfadeEnabled) CROSSFADE_DURATION_MS + 1500L else 3000L
+
+        val runnable = object : Runnable {
+            override fun run() {
+                if (isCrossfading || nextTrackPrepared || nextMediaPlayer != null) return
+                val remaining = try {
+                    val mp = mediaPlayer ?: return
+                    (mp.duration - mp.currentPosition).toLong()
+                } catch (e: Exception) { return }
+
+                when {
+                    remaining in 1..prepareAheadMs -> prepareNextTrack(startCrossfadeWhenReady = crossfadeEnabled)
+                    remaining > prepareAheadMs -> workerHandler.postDelayed(this, 500)
+                }
+            }
+        }
+        scheduleRunnable = runnable
+        workerHandler.postDelayed(runnable, 1000)
+    }
+
+    private fun prepareNextTrack(startCrossfadeWhenReady: Boolean) {
+        val next = peekNextTrack() ?: return
+        val np = MediaPlayer()
+        np.setAudioAttributes(
+            AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                .build()
+        )
+        np.setOnPreparedListener { mp ->
+            nextTrackPrepared = true
+            if (startCrossfadeWhenReady && !isCrossfading) {
+                mp.setVolume(0f, 0f)
+                mp.start()
+                startCrossfadeAnimation()
+            }
+        }
+        np.setOnCompletionListener(this)
+        try {
+            np.setDataSource(context, Uri.parse(next.songPath))
+            np.prepareAsync()
+        } catch (e: Exception) {
+            Log.e("LocalPlayback", "Failed to prepare next track", e)
+            try { np.release() } catch (ex: Exception) {}
+            return
+        }
+        nextMediaPlayer = np
+    }
+
+    private fun startCrossfadeAnimation() {
+        isCrossfading = true
+        val stepDelay = CROSSFADE_DURATION_MS / CROSSFADE_STEPS
+        var step = 0
+        val runnable = object : Runnable {
+            override fun run() {
+                if (!isCrossfading) return
+                step++
+                val progress = step.toFloat() / CROSSFADE_STEPS
+                try {
+                    mediaPlayer?.setVolume(1f - progress, 1f - progress)
+                    nextMediaPlayer?.setVolume(progress, progress)
+                } catch (e: Exception) {}
+                if (step < CROSSFADE_STEPS) workerHandler.postDelayed(this, stepDelay)
+                // onCompletion on the old player finalizes the swap
+            }
+        }
+        workerHandler.postDelayed(runnable, stepDelay)
+    }
+
+    // ── Audio focus ───────────────────────────────────────────────
 
     private fun tryGetAudioFocus(): Boolean {
         val r: Int
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (audioFocusRequest == null) {
-                val playbackAttributes = AudioAttributes.Builder()
+                val attrs = AudioAttributes.Builder()
                     .setUsage(AudioAttributes.USAGE_MEDIA)
                     .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                     .build()
                 audioFocusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
-                    .setAudioAttributes(playbackAttributes)
+                    .setAudioAttributes(attrs)
                     .setAcceptsDelayedFocusGain(true)
                     .setOnAudioFocusChangeListener(this, workerHandler)
                     .build()
@@ -233,6 +360,7 @@ class LocalPlayback(
             r = audioManager.requestAudioFocus(audioFocusRequest!!)
             if (r == AudioManager.AUDIOFOCUS_REQUEST_DELAYED) delayedPlayback = true
         } else {
+            @Suppress("DEPRECATION")
             r = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)
         }
         return r == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
@@ -242,6 +370,7 @@ class LocalPlayback(
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && audioFocusRequest != null) {
             audioManager.abandonAudioFocusRequest(audioFocusRequest!!)
         } else {
+            @Suppress("DEPRECATION")
             audioManager.abandonAudioFocus(this)
         }
     }
@@ -254,12 +383,10 @@ class LocalPlayback(
 
     private fun configurePlayerState() {
         when (currentState) {
-            AudioManager.AUDIOFOCUS_LOSS, AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
+            AudioManager.AUDIOFOCUS_LOSS, AudioManager.AUDIOFOCUS_LOSS_TRANSIENT ->
                 playbackCallback?.onFocusChanged(false)
-            }
-            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK ->
                 mediaPlayer?.setVolume(0.2f, 0.2f)
-            }
             AudioManager.AUDIOFOCUS_GAIN -> {
                 mediaPlayer?.setVolume(1.0f, 1.0f)
                 playbackCallback?.onFocusChanged(true)

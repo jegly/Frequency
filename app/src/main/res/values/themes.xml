@@ -30,6 +30,10 @@
         <item name="colorSurface">@color/md_theme_surface</item>
         <item name="colorOnSurface">@color/md_theme_onSurface</item>
         
+        <!-- Splash screen: match app background so nothing is visible on launch -->
+        <item name="android:windowSplashScreenBackground">#FDFCF7</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_transparent</item>
+
         <!-- Status bar -->
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">true</item>

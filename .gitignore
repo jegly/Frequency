@@ -1,2 +1,23 @@
+# Build outputs
+build/
 app/build/
+**/build/
+*.class
+*.apk
+*.aab
 **/mapping.txt
+
+# Gradle
+.gradle/
+gradle/wrapper/gradle-wrapper.jar
+local.properties
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# OS
+.DS_Store
+Thumbs.db
