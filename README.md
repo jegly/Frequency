@@ -1,4 +1,3 @@
-# Frequency
 
 <p align="center">
   <img src="Freq_banner.png" alt="Frequency Banner" />
