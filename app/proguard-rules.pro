@@ -1,23 +1,53 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# Preserve source file names and line numbers for readable crash reports
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Keep Kotlin generic type signatures (needed for StateFlow, coroutines, etc.)
+-keepattributes Signature
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Keep annotations (required by Glide, Compose, and Kotlin metadata)
+-keepattributes *Annotation*
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
--keep class !com.hardcodecoder.pulsemusic.loaders.TrackFetcherFromStorage.java
--keep class !com.hardcodecoder.pulsemusic.model.MusicModel.java
+# ── Data models (serialized to/from JSON by PlaylistStorageManager) ───────────
+-keep class com.jegly.frequency.model.** { *; }
+
+# ── Glide ─────────────────────────────────────────────────────────────────────
+-keep public class * implements com.bumptech.glide.module.GlideModule
+-keep public class * extends com.bumptech.glide.module.AppGlideModule { <init>(...); }
+-keep public enum com.bumptech.glide.load.ImageHeaderParser$** {
+    **[] $VALUES;
+    public *;
+}
+-keep class com.bumptech.glide.load.data.ParcelFileDescriptorRewinder$InternalRewinder {
+    *** rewind();
+}
+-dontwarn com.bumptech.glide.**
+
+# ── Kotlin coroutines ─────────────────────────────────────────────────────────
+-keepnames class kotlinx.coroutines.internal.MainDispatcherFactory {}
+-keepnames class kotlinx.coroutines.CoroutineExceptionHandler {}
+-keepclassmembernames class kotlinx.coroutines.** { volatile <fields>; }
+-dontwarn kotlinx.coroutines.**
+
+# ── Kotlin metadata (needed for reflection-based libraries) ───────────────────
+-keep class kotlin.Metadata { *; }
+-dontwarn kotlin.**
+
+# ── Enums ─────────────────────────────────────────────────────────────────────
+-keepclassmembers enum * {
+    public static **[] values();
+    public static ** valueOf(java.lang.String);
+}
+
+# ── AndroidX media (MediaBrowserService, MediaController) ─────────────────────
+-keep class androidx.media.** { *; }
+-keep class android.support.v4.media.** { *; }
+
+# ── Biometric ─────────────────────────────────────────────────────────────────
+-keep class androidx.biometric.** { *; }
+
+# ── Splash screen ─────────────────────────────────────────────────────────────
+-keep class androidx.core.splashscreen.** { *; }
+
+# ── DocumentFile (SAF folder import) ─────────────────────────────────────────
+-keep class androidx.documentfile.** { *; }

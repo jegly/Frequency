@@ -6,15 +6,15 @@ plugins {
 }
 
 android {
-    namespace 'com.tunes.player'
+    namespace 'com.jegly.frequency'
     compileSdk 37
 
     defaultConfig {
-        applicationId "com.tunes.player"
-        minSdk 35
+        applicationId "com.jegly.frequency"
+        minSdk 33
         targetSdk 37
-        versionCode 5
-        versionName "5.0.1"
+        versionCode 4
+        versionName "0.2.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -80,6 +80,9 @@ dependencies {
     // Coroutines
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0'
     
+    // Splash screen
+    implementation 'androidx.core:core-splashscreen:1.0.1'
+
     // Biometric
     implementation 'androidx.biometric:biometric:1.2.0-alpha05'
     

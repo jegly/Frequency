@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Tunes</string>
+    <string name="app_name">Frequency</string>
 
-    <string name="channel_name">Tunes Notification</string>
+    <string name="channel_name">Frequency Notification</string>
 
     <string name="iv_content_desc">Album art image</string>
     <string name="iv_btn_close_description">Close button</string>
@@ -122,7 +122,7 @@
     <string name="app_designer">Designed by</string>
 
     <string name="app_tester">Testers</string>
-    <string name="app_author">Tunes</string>
+    <string name="app_author">Frequency</string>
 
     <string name="donate_title">Liked my work? Buy me a cup of coffee</string>
     <string name="donate">Buy me a Coffee</string>
