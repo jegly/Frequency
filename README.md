@@ -1,5 +1,9 @@
 # Frequency
 
+<p align="center">
+  <img src="Freq_banner.png" alt="Frequency Banner" />
+</p>
+
 Android music player with a built-in tone generator / synthesizer.
 
 ## Features
