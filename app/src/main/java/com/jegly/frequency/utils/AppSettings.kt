@@ -182,6 +182,15 @@ object AppSettings {
     fun getPlaybackSpeed(context: Context): Float =
         getPrefs(context).getFloat(PLAYBACK_SPEED, 1.0f)
 
+    // Volume boost — extra gain applied via LoudnessEnhancer, in millibels
+    // (100 mB = 1 dB). 0 = off. Lets output go past the system's 100% ceiling.
+    private const val VOLUME_BOOST_MB = "VolumeBoostMb"
+    const val VOLUME_BOOST_MAX_MB = 2000   // +20 dB
+    fun setVolumeBoostMb(context: Context, gainMb: Int) =
+        getPrefs(context).edit().putInt(VOLUME_BOOST_MB, gainMb.coerceIn(0, VOLUME_BOOST_MAX_MB)).apply()
+    fun getVolumeBoostMb(context: Context): Int =
+        getPrefs(context).getInt(VOLUME_BOOST_MB, 0).coerceIn(0, VOLUME_BOOST_MAX_MB)
+
     // Crossfade
     fun setCrossfadeEnabled(context: Context, enabled: Boolean) =
         getPrefs(context).edit().putBoolean(CROSSFADE_ENABLED, enabled).apply()

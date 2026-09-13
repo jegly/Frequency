@@ -22,6 +22,8 @@ interface Playback {
 
     fun setPlaybackSpeed(speed: Float)
 
+    fun setVolumeBoost(gainMillibels: Int)
+
     fun setCallback(callback: Callback)
 
     interface Callback {

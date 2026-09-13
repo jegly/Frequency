@@ -19,6 +19,7 @@ class PlaybackManager(
 
     companion object {
         const val ACTION_SET_SPEED = "com.jegly.frequency.ACTION_SET_SPEED"
+        const val ACTION_SET_VOLUME_BOOST = "com.jegly.frequency.ACTION_SET_VOLUME_BOOST"
         const val METADATA_TITLE_KEY = MediaMetadata.METADATA_KEY_TITLE
         const val METADATA_ARTIST_KEY = MediaMetadata.METADATA_KEY_ARTIST
         const val METADATA_ALBUM_KEY = MediaMetadata.METADATA_KEY_ALBUM
@@ -71,9 +72,15 @@ class PlaybackManager(
             }
 
             override fun onCustomAction(action: String, extras: Bundle?) {
-                if (action == ACTION_SET_SPEED) {
-                    val speed = extras?.getFloat("speed", 1.0f) ?: 1.0f
-                    playback.setPlaybackSpeed(speed)
+                when (action) {
+                    ACTION_SET_SPEED -> {
+                        val speed = extras?.getFloat("speed", 1.0f) ?: 1.0f
+                        playback.setPlaybackSpeed(speed)
+                    }
+                    ACTION_SET_VOLUME_BOOST -> {
+                        val gain = extras?.getInt("gainMb", 0) ?: 0
+                        playback.setVolumeBoost(gain)
+                    }
                 }
             }
 

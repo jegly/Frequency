@@ -444,6 +444,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         )
     }
 
+    fun setVolumeBoost(gainMb: Int) {
+        val clamped = gainMb.coerceIn(0, AppSettings.VOLUME_BOOST_MAX_MB)
+        AppSettings.setVolumeBoostMb(getApplication(), clamped)
+        val bundle = Bundle().apply { putInt("gainMb", clamped) }
+        mediaController?.transportControls?.sendCustomAction(
+            com.jegly.frequency.playback.PlaybackManager.ACTION_SET_VOLUME_BOOST, bundle
+        )
+    }
+
     override fun onCleared() {
         super.onCleared()
         mediaBrowser?.disconnect()

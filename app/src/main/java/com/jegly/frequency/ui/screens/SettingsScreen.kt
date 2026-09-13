@@ -53,6 +53,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
     var autoRemoveDuplicates by remember { mutableStateOf(AppSettings.isAutoRemoveDuplicates(context)) }
     val miniPlayerHidden by viewModel.miniPlayerHidden.collectAsState()
     var preferredDeviceId by remember { mutableIntStateOf(AppSettings.getPreferredAudioDeviceId(context)) }
+    var volumeBoostMb by remember { mutableIntStateOf(AppSettings.getVolumeBoostMb(context)) }
     var audioPickerOpen   by remember { mutableStateOf(false) }
 
     val themeMode by viewModel.themeMode.collectAsState()
@@ -269,6 +270,33 @@ fun SettingsScreen(viewModel: MainViewModel) {
                         } catch (e: ActivityNotFoundException) {
                             Toast.makeText(context, "No equalizer found on this device", Toast.LENGTH_SHORT).show()
                         }
+                    }
+                )
+            }
+
+            item {
+                val db = volumeBoostMb / 100
+                ListItem(
+                    headlineContent = { Text("Volume boost") },
+                    supportingContent = {
+                        Column {
+                            Text(
+                                if (volumeBoostMb == 0) "Off — output limited to system maximum"
+                                else "+$db dB above system maximum (headphones may distort)"
+                            )
+                            Slider(
+                                value = volumeBoostMb.toFloat(),
+                                onValueChange = { volumeBoostMb = it.toInt() },
+                                onValueChangeFinished = { viewModel.setVolumeBoost(volumeBoostMb) },
+                                valueRange = 0f..AppSettings.VOLUME_BOOST_MAX_MB.toFloat(),
+                                steps = (AppSettings.VOLUME_BOOST_MAX_MB / 100) - 1,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
+                    },
+                    leadingContent = {
+                        Icon(Icons.Default.VolumeUp, contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary)
                     }
                 )
             }

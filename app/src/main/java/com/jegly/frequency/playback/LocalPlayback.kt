@@ -8,6 +8,7 @@ import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.media.MediaPlayer
+import android.media.audiofx.LoudnessEnhancer
 import android.media.session.PlaybackState
 import android.net.Uri
 import android.os.Build
@@ -46,6 +47,10 @@ class LocalPlayback(
     // Gapless / crossfade
     private var nextMediaPlayer: MediaPlayer? = null
     private var nextTrackPrepared = false
+
+    // Volume boost (LoudnessEnhancer) — one effect per active MediaPlayer session
+    private var loudnessEnhancer: LoudnessEnhancer? = null
+    private var nextLoudnessEnhancer: LoudnessEnhancer? = null
     private var isCrossfading = false
     private var scheduleRunnable: Runnable? = null
 
@@ -92,6 +97,7 @@ class LocalPlayback(
             applyPreferredDevice(this)
         }
         audioSessionId = mediaPlayer?.audioSessionId ?: 0
+        attachPrimaryEnhancer()
 
         val activeItem = trackManager.getActiveQueueItem()
         if (activeItem?.songPath == null) {
@@ -161,6 +167,7 @@ class LocalPlayback(
             isCrossfading = false
             nextTrackPrepared = false
             audioSessionId = mediaPlayer?.audioSessionId ?: 0
+            promoteNextEnhancer()
             playbackCallback?.onTrackChangedSeamlessly()
             scheduleCrossfadeOrGapless()
             return
@@ -177,6 +184,7 @@ class LocalPlayback(
             nextMediaPlayer = null
             nextTrackPrepared = false
             audioSessionId = mediaPlayer?.audioSessionId ?: 0
+            promoteNextEnhancer()
             mediaPlayer?.start()
             playbackState = PlaybackState.STATE_PLAYING
             playbackCallback?.onPlaybackStateChanged(playbackState)
@@ -222,6 +230,7 @@ class LocalPlayback(
             }
             mediaPlayer = null
         }
+        releaseEnhancer(loudnessEnhancer); loudnessEnhancer = null
 
         if (isBecomingNoisyReceiverRegistered) {
             try { context.unregisterReceiver(becomingNoisyReceiver) } catch (e: Exception) {
@@ -241,6 +250,7 @@ class LocalPlayback(
             try { if (it.isPlaying) it.stop(); it.release() } catch (e: Exception) {}
             mediaPlayer = null
         }
+        releaseEnhancer(loudnessEnhancer); loudnessEnhancer = null
         playbackState = PlaybackState.STATE_STOPPED
         playbackCallback?.onPlaybackStateChanged(playbackState)
         resumePosition = -1
@@ -261,6 +271,60 @@ class LocalPlayback(
         }
     }
 
+    // ── Volume boost ──────────────────────────────────────────────
+
+    private fun releaseEnhancer(e: LoudnessEnhancer?) {
+        try {
+            e?.enabled = false
+            e?.release()
+        } catch (ex: Exception) {
+            Log.w("LocalPlayback", "LoudnessEnhancer release failed", ex)
+        }
+    }
+
+    private fun buildEnhancer(sessionId: Int): LoudnessEnhancer? {
+        if (sessionId == 0) return null
+        val gain = AppSettings.getVolumeBoostMb(context)
+        return try {
+            LoudnessEnhancer(sessionId).apply {
+                setTargetGain(gain)
+                enabled = gain > 0
+            }
+        } catch (e: Exception) {
+            Log.w("LocalPlayback", "LoudnessEnhancer init failed", e)
+            null
+        }
+    }
+
+    /** (Re)attach the boost effect to the current primary MediaPlayer's session. */
+    private fun attachPrimaryEnhancer() {
+        releaseEnhancer(loudnessEnhancer)
+        loudnessEnhancer = buildEnhancer(mediaPlayer?.audioSessionId ?: 0)
+    }
+
+    /** Called when a prepared next player is promoted to primary during a swap. */
+    private fun promoteNextEnhancer() {
+        releaseEnhancer(loudnessEnhancer)
+        loudnessEnhancer = nextLoudnessEnhancer
+        nextLoudnessEnhancer = null
+        if (loudnessEnhancer == null) attachPrimaryEnhancer()
+    }
+
+    override fun setVolumeBoost(gainMillibels: Int) {
+        val gain = gainMillibels.coerceIn(0, AppSettings.VOLUME_BOOST_MAX_MB)
+        listOfNotNull(loudnessEnhancer, nextLoudnessEnhancer).forEach { e ->
+            try {
+                // Gain changes reliably latch only while the effect is disabled.
+                e.enabled = false
+                e.setTargetGain(gain)
+                e.enabled = gain > 0
+            } catch (ex: Exception) {
+                Log.w("LocalPlayback", "setTargetGain failed", ex)
+            }
+        }
+        if (loudnessEnhancer == null && mediaPlayer != null) attachPrimaryEnhancer()
+    }
+
     // ── Gapless / Crossfade ───────────────────────────────────────
 
     private fun peekNextTrack(): MusicModel? {
@@ -278,6 +342,7 @@ class LocalPlayback(
             try { if (it.isPlaying) it.stop(); it.release() } catch (e: Exception) {}
         }
         nextMediaPlayer = null
+        releaseEnhancer(nextLoudnessEnhancer); nextLoudnessEnhancer = null
     }
 
     private fun scheduleCrossfadeOrGapless() {
@@ -334,6 +399,8 @@ class LocalPlayback(
             return
         }
         nextMediaPlayer = np
+        releaseEnhancer(nextLoudnessEnhancer)
+        nextLoudnessEnhancer = buildEnhancer(np.audioSessionId)
     }
 
     private fun startCrossfadeAnimation() {

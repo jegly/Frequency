@@ -52,6 +52,9 @@ class MediaNotificationManager(private val service: TMS) {
         service.stopForeground(Service.STOP_FOREGROUND_REMOVE)
     }
 
+    // androidx.media's classic MediaStyle/MediaSessionCompat.Token API is deprecated in favor of
+    // Media3, but migrating the whole playback stack to Media3 is a separate, larger task.
+    @Suppress("DEPRECATION")
     private fun createNotification(session: MediaSession, isPlaying: Boolean): Notification {
         val controller = session.controller
         val metadata = controller.metadata
