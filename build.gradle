@@ -1,12 +1,12 @@
 buildscript {
-    ext.kotlin_version = '2.4.20'
+    ext.kotlin_version = '2.4.21'
     repositories {
         google()
         mavenCentral()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:9.4.0'
-        classpath 'org.jetbrains.kotlin:compose-compiler-gradle-plugin:2.4.20'
+        classpath 'org.jetbrains.kotlin:compose-compiler-gradle-plugin:2.4.21'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         // KSP replaces kapt for the Glide annotation processor so the app module
         // can drop 'org.jetbrains.kotlin.android' and use AGP's built-in Kotlin.
