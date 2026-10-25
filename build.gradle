@@ -5,7 +5,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:9.4.0'
+        classpath 'com.android.tools.build:gradle:9.4.1'
         classpath 'org.jetbrains.kotlin:compose-compiler-gradle-plugin:2.4.21'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         // KSP replaces kapt for the Glide annotation processor so the app module
