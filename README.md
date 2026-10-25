@@ -58,6 +58,27 @@ Monophonic software synthesizer for brainwave entrainment, meditation, and sound
 ./gradlew assembleRelease
 ```
 
+## Release signing
+
+Release APKs use hybrid signing (APK Signature Scheme v3.2): the original app key plus an EC P-384 key and an ML-DSA-87 post-quantum key. Android 17 and newer verify the hybrid block, where the ML-DSA-87 key is the signer; earlier Android versions verify the original key as before.
+
+| File | SHA-256 |
+| --- | --- |
+| `Frequency-0.2.3-PQC-signed.apk` | `78f7bc0909f5950a8e251ada38a924872e14d892470947b9ab13bc1ec150bab2` |
+
+Verify a download:
+
+```bash
+sha256sum Frequency-0.2.3-PQC-signed.apk
+apksigner verify -v --print-certs Frequency-0.2.3-PQC-signed.apk   # build-tools 37.0.0 on JDK 25 shows all three keys
+```
+
+Signing certificate SHA-256:
+
+- ML-DSA-87 (post-quantum): `5f99de5b3195753d4fe8ddabebd2fb27356b2109d6fbb2471fcbbdf21a9e76a6`
+- EC P-384 (hybrid classical): `fa8f4a07e6a4f2b7dc6e5ab31fc05592b1414ab9436d1e2e39b35ce3bb2e33a2`
+- Original key: `98d324d4106a368c62729a0a24d9ac9a6b47f8ac4c6585348531f0ee4eb6a04c`
+
 ## License
 
 GPL-3.0 — see [LICENSE](LICENSE)
