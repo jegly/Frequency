@@ -64,13 +64,13 @@ Release APKs use hybrid signing (APK Signature Scheme v3.2): the original app ke
 
 | File | SHA-256 |
 | --- | --- |
-| `Frequency-0.2.3-PQC-signed.apk` | `78f7bc0909f5950a8e251ada38a924872e14d892470947b9ab13bc1ec150bab2` |
+| `Frequency-0.2.4-PQC-signed.apk` | `8c8515c3ca8542f6cb1a03272dcb9d030a762c1edc3fdf4bb673124605660580` |
 
 Verify a download:
 
 ```bash
-sha256sum Frequency-0.2.3-PQC-signed.apk
-apksigner verify -v --print-certs Frequency-0.2.3-PQC-signed.apk   # build-tools 37.0.0 on JDK 25 shows all three keys
+sha256sum Frequency-0.2.4-PQC-signed.apk
+apksigner verify -v --print-certs Frequency-0.2.4-PQC-signed.apk   # build-tools 37.0.0 on JDK 25 shows all three keys
 ```
 
 Signing certificate SHA-256:
