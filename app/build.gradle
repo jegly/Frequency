@@ -12,8 +12,9 @@ android {
         applicationId = "com.jegly.frequency"
         minSdk = 33
         targetSdk = 37
-        versionCode = 7
-        versionName = "0.2.3"
+        // CI release builds pass these; local builds use the defaults.
+        versionCode = providers.gradleProperty("appVersionCode").map { it.toInteger() }.getOrElse(7)
+        versionName = providers.gradleProperty("appVersionName").getOrElse("0.2.3")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
