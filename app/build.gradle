@@ -81,7 +81,7 @@ dependencies {
     implementation 'androidx.core:core-splashscreen:1.2.0'
 
     // Biometric
-    implementation 'androidx.biometric:biometric:1.4.0-alpha07'
+    implementation 'androidx.biometric:biometric:1.4.0-beta01'
 
     // Media
     implementation 'androidx.media:media:1.8.0'
