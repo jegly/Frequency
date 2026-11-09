@@ -16,7 +16,7 @@ buildscript {
             classpath "io.netty:netty-handler-proxy:4.2.19.Final"
             classpath "io.netty:netty-resolver:4.2.19.Final"
             classpath "io.netty:netty-transport:4.2.19.Final"
-            classpath "io.netty:netty-transport-native-epoll:4.2.19.Final"
+            classpath "io.netty:netty-transport-native-epoll:4.2.20.Final"
             classpath "org.bouncycastle:bcprov-jdk18on:1.86"
             classpath "org.bouncycastle:bcpkix-jdk18on:1.86"
             classpath "org.jdom:jdom2:2.0.6.1"
