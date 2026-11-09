@@ -31,7 +31,7 @@ buildscript {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         // KSP replaces kapt for the Glide annotation processor so the app module
         // can drop 'org.jetbrains.kotlin.android' and use AGP's built-in Kotlin.
-        classpath 'com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:2.3.12'
+        classpath 'com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:2.3.13'
     }
 }
 
